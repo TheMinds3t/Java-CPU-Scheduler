@@ -41,15 +41,29 @@ public class Process {
 		this.isCurrentIO = false;
 	}
 	
+	/**
+	 * gets the processes priority
+	 * @return the processes priority
+	 */
 	public int getPriority() {
 		return this.priority;
 	}
 	
+	/**
+	 * TODO
+	 * gets the list of process information
+	 * @return a string with all process information
+	 */
 	public String getInformation() {
 		// TODO: return a list of process information
 		
 		return "";
 	}
+	
+	/**
+	 * sets a new process state and information that changes on state change
+	 * @param newState - the State the process is switched to
+	 */
 	public void setState(State newState) {
 		this.processState = newState;
 		this.isCurrentIO = false;
@@ -60,11 +74,17 @@ public class Process {
 		}
 	}
 	
-	// tell the process it is currently the head of the IO queue so it can mark progress
+	/**
+	 *  tells the process it is currently the head of the IO queue so it can mark progress
+	 */
 	public void setCurrentIO() {
 		this.isCurrentIO = true;
 	}
 	
+	/**
+	 * increments the processes system time by one.
+	 * handles increasing process wait counts and burst progress
+	 */
 	public void incrementCounter() {
 		this.MyCounter++; // update system time
 		// based on previous state, update counters
