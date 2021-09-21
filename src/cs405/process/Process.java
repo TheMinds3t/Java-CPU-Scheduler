@@ -37,6 +37,8 @@ public class Process {
 		this.CPUwait = 0;
 		this.IOwait = 0;
 		this.currentBurstList = Burst.CPU;
+		this.currentBurstIndex = 0;
+		this.isCurrentIO = false;
 	}
 	
 	public int getPriority() {
@@ -44,16 +46,23 @@ public class Process {
 	}
 	
 	public String getInformation() {
-		// return a list of process information
+		// TODO: return a list of process information
 		
 		return "";
 	}
 	public void setState(State newState) {
 		this.processState = newState;
+		this.isCurrentIO = false;
+	
 		if (newState == State.TERMINATED) {
 			this.finishTime = this.MyCounter;
 			this.turnaroundTime = this.finishTime - this.arrivalTime;
 		}
+	}
+	
+	// tell the process it is currently the head of the IO queue so it can mark progress
+	public void setCurrentIO() {
+		this.isCurrentIO = true;
 	}
 	
 	public void incrementCounter() {
