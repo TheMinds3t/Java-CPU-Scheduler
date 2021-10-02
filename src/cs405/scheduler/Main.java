@@ -1,5 +1,7 @@
 package cs405.scheduler;
 
+import cs405.scheduler.gui.CPUFrame;
+
 public class Main {
 
 	/**
