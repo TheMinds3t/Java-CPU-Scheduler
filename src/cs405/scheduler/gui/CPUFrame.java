@@ -50,7 +50,8 @@ public class CPUFrame extends JFrame {
 	private ButtonGroup algGroup = new ButtonGroup();
 	private JRadioButtonMenuItem[] algButs = new JRadioButtonMenuItem[4];
 	private JComboBox<Integer> fpsCombo;
-
+	private QueuePanel queuePanel = new QueuePanel();
+	
 	private ArrayList<ProcessLogEntry> processLogRaw = new ArrayList<ProcessLogEntry>();
 	
 	/**
@@ -75,6 +76,7 @@ public class CPUFrame extends JFrame {
 	public CPUFrame() {
 		setBackground(Color.GRAY);
 		setAlwaysOnTop(true);
+//		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 900, 600);
 		
@@ -86,7 +88,7 @@ public class CPUFrame extends JFrame {
 		JLabel menuLMarg = new JLabel("          ");
 		menuBar.add(menuLMarg);
 		
-		JLabel algLabel = new JLabel("Scheduling Algorithm:");
+		JLabel algLabel = new JLabel("Scheduling Algorithm:  ");
 		menuBar.add(algLabel);
 		JRadioButtonMenuItem fcfsAlg = new JRadioButtonMenuItem("FCFS");
 		fcfsAlg.setSelected(true);
@@ -356,7 +358,7 @@ public class CPUFrame extends JFrame {
 		gbc_queuesLabel.gridy = 0;
 		queuesPanel.add(queuesLabel, gbc_queuesLabel);
 		
-		QueuePanel queuePanel = new QueuePanel();
+		
 		GridBagConstraints gbc_queuePanel = new GridBagConstraints();
 		gbc_queuePanel.gridwidth = 4;
 		gbc_queuePanel.insets = new Insets(0, 0, 0, 5);
@@ -430,7 +432,8 @@ public class CPUFrame extends JFrame {
 	 * 
 	 * Format of data:
 	 * 		Array of rows, each second dimension is the following:
-	 * 			ID (int), Arrival (int), Priority (int), CPU Bursts (String), I/O Bursts (String), Start Time (int), End Time (int), Wait Time (int), Wait I/O Time (int), Status (String)
+	 * 			{ID (int), Arrival (int), Priority (int), CPU Bursts (String), I/O Bursts (String), Start Time (int), End Time (int), Wait Time (int), Wait I/O Time (int), Status (String)}
+	 * Values can be null to specify an empty cell.
 	 * @param data the 2d array to specify the rows to add
 	 */
 	@SuppressWarnings("rawtypes")
@@ -451,7 +454,6 @@ public class CPUFrame extends JFrame {
 					Integer.class, Integer.class, Integer.class, String.class, String.class, Integer.class, Integer.class, Integer.class, Integer.class, String.class
 				};
 				
-				@SuppressWarnings("unchecked")
 				public Class<?> getColumnClass(int columnIndex) {
 					return columnTypes[columnIndex];
 				}
@@ -609,6 +611,14 @@ public class CPUFrame extends JFrame {
 		System.out.println("Chose file \'"+file.getAbsolutePath()+"\'! please fill this method out, or let me know once backend has a callback for this.");		
 	}
 
+	/**
+	 * @return the GUI element to display the CPU / IO processing queues.
+	 */
+	public QueuePanel getQueuePanel()
+	{
+		return queuePanel;
+	}
+	
 	/**
 	 * A data structure to tuple the entry and colors together for processLogRaw.
 	 * @author Ashton Schultz
