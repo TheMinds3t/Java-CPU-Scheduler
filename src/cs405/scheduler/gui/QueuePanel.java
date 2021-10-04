@@ -2,6 +2,7 @@ package cs405.scheduler.gui;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
@@ -20,17 +21,6 @@ public class QueuePanel extends JPanel {
 	public QueuePanel() {
 		super();
 		repaint();
-		ioTasks.clear();
-		cpuTasks.clear();
-		cpuTasks.add("P1");
-//		cpuTasks.add("P2");
-//		cpuTasks.add("P2");
-		ioTasks.add("P3");
-		ioTasks.add("P4");
-		ioTask = null;
-		cpuTask = null;
-		//ioTask = "P5";
-		cpuTask = "P6";
 	}
 	
 	//Populates the panel with the queue imagery
@@ -38,6 +28,19 @@ public class QueuePanel extends JPanel {
 	{
 		super.paintComponent(g);
 		Graphics2D graphics = (Graphics2D)g;
+
+		ioTasks.clear();
+		cpuTasks.clear();
+		cpuTasks.add("P1");
+		cpuTasks.add("P2");
+//		cpuTasks.add("P2");
+		ioTasks.add("P3");
+//		ioTasks.add("P4");
+		ioTask = null;
+		cpuTask = null;
+		ioTask = "P5";
+		cpuTask = "P6";
+
 		
 		//define constants
 		int x = getX();
@@ -54,7 +57,8 @@ public class QueuePanel extends JPanel {
 		Font f = graphics.getFont();
 		
 		//offset to fix graphic bug
-		g.translate(0, -height/8+margin);
+		float height_scale = height/230.0f;
+		g.translate(0, (int)(-height/8*height_scale+margin));
 		
 		//distinguish two queue regions
 		graphics.setColor(Color.gray.brighter());
@@ -71,58 +75,62 @@ public class QueuePanel extends JPanel {
 		graphics.drawLine(cpuX, cpuY+rectH/2, cpuX+(int)(cpuTasks.size()*rectW*1.25)+rectW/2, cpuY+rectH/2);
 		//line to connect io tasks
 		graphics.drawLine(ioX, ioY+rectH/2, ioX-(int)(ioTasks.size()*rectW*1.25)+rectW/2, ioY+rectH/2);
+		
 		drawCornerArrow(graphics, cpuX-rectW/3,cpuY+height/2,rectW,rectH);
 		graphics.rotate(Math.toRadians(180), ioX, ioY);
 		drawCornerArrow(graphics, ioX-rectW/3*4,ioY+rectH/3,rectW,rectH);
 		graphics.rotate(Math.toRadians(180), ioX, ioY);
 
-		//Labels
+		//Block Labels
 		graphics.setColor(Color.white);
-		drawCentered(graphics, "CPU 1", cpuX + margin, cpuY+margin+f.getSize2D());
+		drawCentered(graphics, "CPU 1", cpuX + rectW/2, cpuY+margin*2+f.getSize2D());
 		
+		//Current cpu task
 		String cTask = cpuTask == null ? "Idle" : cpuTask;
 		graphics.setColor(Color.green);
 		if(!cTask.equals("Idle"))
 		{
 			graphics.setColor(Color.darkGray);
-			graphics.fillOval(cpuX+rectW/4, cpuY+margin*2+rectH/4, rectW/2, rectH/2);
+			graphics.fillOval(cpuX+rectW/4-4, cpuY+margin+rectH/4, rectW/2+8, rectH/2+8);
 			graphics.setColor(Color.white);
 		}
 		
-		drawCentered(graphics, cTask, cpuX + rectW/2-f.getSize2D(), cpuY+rectH/3+f.getSize2D()*2);
-			
-		drawCentered(graphics, "I/O 1", ioX + margin, ioY + margin + f.getSize2D());
+		drawCentered(graphics, cTask, cpuX + rectW/2, cpuY+margin*2+rectH/2+4);			
 
+		//Block Labels
+		graphics.setColor(Color.white);
+		drawCentered(graphics, "I/O 1", ioX + rectW/2, ioY + margin*2 + f.getSize2D());
+		//Current IO task
 		String iTask = ioTask == null ? "Idle" : ioTask;
 
 		graphics.setColor(Color.green);
 		if(!iTask.equals("Idle"))
 		{
 			graphics.setColor(Color.darkGray);
-			graphics.fillOval(ioX+rectW/4, ioY+margin*2+rectH/4, rectW/2, rectH/2);
+			graphics.fillOval(ioX+rectW/4-4, ioY+margin+rectH/4, rectW/2+8, rectH/2+8);
 			graphics.setColor(Color.white);
 		}
 		
-		drawCentered(graphics, iTask, ioX + rectW/2-f.getSize2D(), ioY+rectH/3+f.getSize2D()*2);
+		drawCentered(graphics, iTask, ioX + rectW/2, ioY+margin*2+rectH/2+4);
+		int radius = (rectW+rectH)/2;
 
-		rectH -= f.getSize()*2;
 		
 		for(int i = 0; i < cpuTasks.size(); ++i)
 		{
 			String task = cpuTasks.get(i);
 			graphics.setColor(Color.darkGray);
-			graphics.fillOval(cpuX+(int)(rectW*1.25*(i+1)), cpuY+f.getSize(), rectW-f.getSize()*2, rectH);
+			graphics.fillOval(cpuX+(int)(rectW*1.25)+(int)(radius*1.25*(i)), cpuY+f.getSize(), radius, radius);
 			graphics.setColor(Color.white);
-			drawCentered(graphics, task, cpuX+(int)(rectW*1.25*(i+1))+rectW/2-f.getSize()/2*3,cpuY+f.getSize()+rectH/2);
+			drawCentered(graphics, task, cpuX+(int)(rectW*1.25)+(int)(radius*1.25*(i))+radius/2,cpuY+(int)(f.getSize()*1.5)+radius/2);
 		}
 
 		for(int i = 0; i < ioTasks.size(); ++i)
 		{
 			String task = ioTasks.get(i);
 			graphics.setColor(Color.darkGray);
-			graphics.fillOval(ioX-(int)(rectW*1.25*(i+1)), ioY+f.getSize(), rectW-f.getSize()*2, rectH);
+			graphics.fillOval(ioX-(int)(rectW*1.25)-(int)(radius*1.25*(i)), ioY+f.getSize(), radius, radius);
 			graphics.setColor(Color.white);
-			drawCentered(graphics, task, ioX-(int)(rectW*1.25*(i+1))+rectW/2-f.getSize()/2*3,ioY+f.getSize()+rectH/2);
+			drawCentered(graphics, task, ioX-(int)(rectW*1.25)-(int)(radius*1.25*(i))+radius/2,ioY+(int)(f.getSize()*1.5)+radius/2);
 		}
 	}
 	
@@ -150,9 +158,17 @@ public class QueuePanel extends JPanel {
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 */
-	private void drawCentered(Graphics2D g, String str, float x, float y)
-	{
-		g.drawString(str,x,y);
+	public void drawCentered(Graphics g, String text, float x, float y) {
+	    // Get the FontMetrics
+	    FontMetrics metrics = g.getFontMetrics(g.getFont());
+	    // Determine the X coordinate for the text
+	    x -= metrics.stringWidth(text) / 2;
+	    // Determine the Y coordinate for the text (note we add the ascent, as in java 2d 0 is top of the screen)
+	    y -= metrics.getAscent()/2;
+	    // Draw the String
+	    g.drawString(text, (int)x, (int)y);
+	    //Source:
+	    //https://stackoverflow.com/questions/27706197/how-can-i-center-graphics-drawstring-in-java
 	}
 	
 	/**
