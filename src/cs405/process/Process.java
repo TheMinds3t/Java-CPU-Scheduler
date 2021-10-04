@@ -54,7 +54,13 @@ public class Process {
 	}
 	
 	public int getNextCPUBurst() {
-		return this.CPUbursts.get(0);
+		if (this.processState == State.RUNNING) { // currently working on CPU
+			return this.CPUbursts.get(this.currentBurstIndex) - this.burstCompletion;
+		} else if (this.processState == State.WAITING) { // after working on CPU
+			return this.CPUbursts.get(this.currentBurstIndex + 1);
+		} else { // before working on CPU
+			return this.CPUbursts.get(this.currentBurstIndex);
+		}
 	}
 	
 	/**
@@ -104,6 +110,7 @@ public class Process {
 					// finished IO, go back to CPU
 					this.currentBurstList = Burst.CPU;
 					this.burstCompletion = 0;
+					this.currentBurstIndex++;
 					setState(State.READY);
 				}
 			}
