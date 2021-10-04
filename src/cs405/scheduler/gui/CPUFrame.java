@@ -1,5 +1,8 @@
 package cs405.scheduler.gui;
 
+import cs405.process.*;
+import cs405.process.Process;
+
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
@@ -8,7 +11,9 @@ import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
@@ -603,13 +608,45 @@ public class CPUFrame extends JFrame {
 		System.out.println("Started/Stopped! please fill this method out, or let me know once backend has a callback for this.");
 	}
 
-	//TODO
 	/**
 	 * A placeholder function called when the Load File button is pressed. To be filled in by backend.
 	 */
 	public void onLoadFile(File file)
 	{
-		System.out.println("Chose file \'"+file.getAbsolutePath()+"\'! please fill this method out, or let me know once backend has a callback for this.");		
+		// TODO: Move function into the scheduler so the masterList can be saved
+		Scanner fileinput;
+		try {
+			fileinput = new Scanner(file);
+		} catch (FileNotFoundException e) {
+			System.err.println("Error: File not found");
+			return;
+		}
+		int index = 0;
+		ArrayList<Process> masterList = new ArrayList<Process>();
+		while (fileinput.hasNext()) {
+			String line = fileinput.nextLine();
+			String[] params = line.split("\\s+"); // split line on whitespace
+			ArrayList<Integer> cpu = new ArrayList<Integer>(); 
+			ArrayList<Integer> io = new ArrayList<Integer>(); 
+			for (int i = 3; i < params.length; i++) { // params 0-2 are not bursts
+				if (i % 2 == 1) { // every odd i is a cpu burst
+					cpu.add(Integer.parseInt(params[i]));
+				} else { // every even i is an io burst
+					io.add(Integer.parseInt(params[i]));
+				}
+			}
+			Process proc = new Process(index, params[0], Integer.parseInt(params[1]), Integer.parseInt(params[2]), cpu, io);
+			masterList.add(proc);
+			index++;
+		}
+		
+		// test that this list can be loaded into the GUI
+		Object[][] update = new Object[masterList.size()][10];
+		for (int i = 0; i < masterList.size(); i++) {
+			update[i] = masterList.get(i).getInformation();
+		}
+		this.setTableData(update);
+		fileinput.close();
 	}
 
 	/**

@@ -14,7 +14,8 @@ public class Process {
 	// data calculated or set
 	private int MyCounter; // system unit time
 	private State processState; // the current process state
-	private int finishTime; // the system time the process terminates
+	private Integer startTime; // the system time the process is first executed by the CPU, Integer to allow null
+	private Integer finishTime; // the system time the process terminates
 	private int CPUwait; // the total time waiting in the CPU queue (time READY)
 	private int IOwait; // the total time waiting in the IO queue (time WAITING)
 	private int turnaroundTime; // the total execution time of a process (finishTime - arrivalTime)
@@ -32,6 +33,8 @@ public class Process {
 		this.CPUbursts = CPUbursts;
 		this.IObursts = IObursts;
 		
+		this.startTime = null;
+		this.finishTime = null;
 		this.MyCounter = 0;
 		this.processState = State.NEW;
 		this.CPUwait = 0;
@@ -54,10 +57,41 @@ public class Process {
 	 * gets the list of process information
 	 * @return a string with all process information
 	 */
-	public String getInformation() {
-		// TODO: return a list of process information
+	public Object[] getInformation() {
+		// {ID (int), Arrival (int), Priority (int), CPU Bursts (String), I/O Bursts (String), Start Time (int), End Time (int), Wait Time (int), Wait I/O Time (int), Status (String)}
+
+		Object[] arr = new Object[10];
+		arr[0] = this.pid;
+		arr[1] = this.arrivalTime;
+		arr[2] = this.priority;
+		arr[3] = this.CPUbursts.toString();
+		arr[4] = this.IObursts.toString();
+		arr[5] = this.startTime;
+		arr[6] = this.finishTime;
+		arr[7] = this.CPUwait;
+		arr[8] = this.IOwait;
+		arr[9] = this.processState;
 		
-		return "";
+		return arr;
+	}
+	
+	public String toString() {
+		Object[] arr = this.getInformation();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < arr.length - 1; i++) {
+			if (arr[i] != null) {
+				sb.append(arr[i].toString());
+			} else {
+				sb.append(" ");
+			}
+			sb.append(", ");
+		}
+		if (arr[arr.length - 1] != null) {
+			sb.append(arr[arr.length - 1].toString());
+		} else {
+			sb.append(" ");
+		}
+		return sb.toString();
 	}
 	
 	/**
@@ -65,13 +99,15 @@ public class Process {
 	 * @param newState - the State the process is switched to
 	 */
 	public void setState(State newState) {
-		this.processState = newState;
-		this.isCurrentIO = false;
-	
 		if (newState == State.TERMINATED) {
 			this.finishTime = this.MyCounter;
 			this.turnaroundTime = this.finishTime - this.arrivalTime;
+		} else if (newState == State.RUNNING && this.currentBurstIndex == 0) { // first CPU
+			this.startTime = this.MyCounter;
 		}
+		
+		this.processState = newState;
+		this.isCurrentIO = false;
 	}
 	
 	/**
