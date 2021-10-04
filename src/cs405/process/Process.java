@@ -49,6 +49,14 @@ public class Process {
 		return this.priority;
 	}
 	
+	public int getArrivalTime() {
+		return this.arrivalTime;
+	}
+	
+	public int getNextCPUBurst() {
+		return this.CPUbursts.get(0);
+	}
+	
 	/**
 	 * TODO
 	 * gets the list of process information
