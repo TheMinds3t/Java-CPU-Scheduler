@@ -8,7 +8,7 @@ public class Main {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		CPUFrame frame = new CPUFrame();
+		CPUFrame frame = new CPUFrame(null);
 		frame.setVisible(true);
 	}
 }
