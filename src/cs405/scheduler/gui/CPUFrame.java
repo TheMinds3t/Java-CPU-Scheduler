@@ -1,5 +1,9 @@
 package cs405.scheduler.gui;
 
+import cs405.process.*;
+import cs405.process.Process;
+import cs405.scheduler.Dispatcher;
+
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -7,7 +11,9 @@ import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
@@ -52,21 +58,15 @@ public class CPUFrame extends JFrame {
 	private JRadioButtonMenuItem[] algButs = new JRadioButtonMenuItem[4];
 	private JComboBox<Integer> fpsCombo;
 	private QueuePanel queuePanel = new QueuePanel(this);
+	private Dispatcher dispatcher;
 	
 	private ArrayList<ProcessLogEntry> processLogRaw = new ArrayList<ProcessLogEntry>();
 	
-	private Scheduler scheduler;
-
 	/**
 	 * Create the frame.
 	 */
-	public CPUFrame(Scheduler scheduler) {
-		
-		if(scheduler != null)
-		{
-			this.scheduler = scheduler;
-		}
-		
+	public CPUFrame(Dispatcher dispatch) {
+		this.dispatcher = dispatch;
 		setBackground(Color.GRAY);
 		setAlwaysOnTop(true);
 		setResizable(false);
@@ -621,7 +621,7 @@ public class CPUFrame extends JFrame {
 				{
 				case SYS_INFO:
 				{
-					if(scheduler != null)
+					if(dispatcher != null)
 					{
 //						setSystemData(, opacity, opacity, opacity);
 					}
@@ -679,28 +679,14 @@ public class CPUFrame extends JFrame {
 		System.out.println("Started/Stopped! please fill this method out, or let me know once backend has a callback for this.");
 	}
 
-	//TODO
 	/**
 	 * TODO: A placeholder function called when the Load File button is pressed. To be filled in by backend.
 	 */
 	public void onLoadFile(File file)
 	{
-		System.out.println("Chose file \'"+file.getAbsolutePath()+"\'! please fill this method out, or let me know once backend has a callback for this.");		
-		syncWithScheduler();
+		this.dispatcher.loadFromFile(file);
+		this.addToProcessLog("Loaded file: " + file.getAbsolutePath());
 	}
-	
-	///TODO
-	/**
-	 * TODO: A function called to synchronize the CPUFrame with it's scheduler object passed at construction.
-	 */
-	public void syncWithScheduler()
-	{
-		if(scheduler != null)
-		{
-			//Once scheduler has getters I can do this part
-		}
-	}
-
 	
 	/**
 	 * A data structure to tuple the entry and colors together for processLogRaw.
