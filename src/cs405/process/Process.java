@@ -38,7 +38,6 @@ public class Process {
 		
 		this.startTime = null;
 		this.finishTime = null;
-		this.MyCounter = 0;
 		this.processState = State.NEW;
 		this.CPUwait = 0;
 		this.IOwait = 0;
@@ -120,7 +119,7 @@ public class Process {
 			this.finishTime = this.systemTime.getCount();
 			this.turnaroundTime = this.finishTime - this.arrivalTime;
 		} else if (newState == State.RUNNING && this.currentBurstIndex == 0) { // first CPU
-			this.startTime = this.MyCounter;
+			this.startTime = this.systemTime.getCount();
 		}
 		
 		this.processState = newState;
