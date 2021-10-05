@@ -1,5 +1,7 @@
 package cs405.process;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import cs405.scheduler.SynchronizedCounter;
@@ -28,6 +30,7 @@ public class Process {
 
 	
 	public Process(int id, String name, int arrivalTime, int priority, List<Integer> CPUbursts, List<Integer> IObursts, SynchronizedCounter counter) {
+		// passed to constructor
 		this.pid = id;
 		this.name = name;
 		this.arrivalTime = arrivalTime;
@@ -36,6 +39,15 @@ public class Process {
 		this.IObursts = IObursts;
 		this.systemTime = counter;
 		
+		// increment the counter whenever the systemTime is incremented
+		this.systemTime.addPropertyChangeListener(new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				incrementCounter();
+			}
+		});
+		
+		// set
 		this.startTime = null;
 		this.finishTime = null;
 		this.processState = State.NEW;
@@ -137,7 +149,7 @@ public class Process {
 	 * increments the processes system time by one.
 	 * handles increasing process wait counts and burst progress
 	 */
-	public void incrementCounter() {
+	private void incrementCounter() {
 		// based on previous state, update counters
 		if (this.processState == State.WAITING) { // previously waiting for IO
 			this.IOwait++;

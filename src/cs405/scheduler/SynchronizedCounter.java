@@ -22,6 +22,7 @@ public class SynchronizedCounter {
 	
 	public synchronized int tickUp() {
 		counter++;
+		this.pcs.firePropertyChange("tick", counter - 1, counter);
 		return counter;
 	}
     public void addPropertyChangeListener(PropertyChangeListener listener) {

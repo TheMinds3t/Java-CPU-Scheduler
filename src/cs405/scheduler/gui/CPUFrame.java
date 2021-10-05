@@ -11,9 +11,7 @@ import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
