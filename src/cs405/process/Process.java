@@ -49,6 +49,20 @@ public class Process {
 		return this.priority;
 	}
 	
+	public int getArrivalTime() {
+		return this.arrivalTime;
+	}
+	
+	public int getNextCPUBurst() {
+		if (this.processState == State.RUNNING) { // currently working on CPU
+			return this.CPUbursts.get(this.currentBurstIndex) - this.burstCompletion;
+		} else if (this.processState == State.WAITING) { // after working on CPU
+			return this.CPUbursts.get(this.currentBurstIndex + 1);
+		} else { // before working on CPU
+			return this.CPUbursts.get(this.currentBurstIndex);
+		}
+	}
+	
 	/**
 	 * TODO
 	 * gets the list of process information
@@ -96,6 +110,7 @@ public class Process {
 					// finished IO, go back to CPU
 					this.currentBurstList = Burst.CPU;
 					this.burstCompletion = 0;
+					this.currentBurstIndex++;
 					setState(State.READY);
 				}
 			}
