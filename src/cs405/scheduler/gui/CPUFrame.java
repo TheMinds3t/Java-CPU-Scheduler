@@ -57,7 +57,7 @@ public class CPUFrame extends JFrame {
 	private ButtonGroup algGroup = new ButtonGroup();
 	private JRadioButtonMenuItem[] algButs = new JRadioButtonMenuItem[4];
 	private JComboBox<Integer> fpsCombo;
-	private QueuePanel queuePanel = new QueuePanel();
+	private QueuePanel queuePanel = new QueuePanel(this);
 	private Dispatcher dispatcher;
 	
 	private ArrayList<ProcessLogEntry> processLogRaw = new ArrayList<ProcessLogEntry>();
@@ -621,7 +621,7 @@ public class CPUFrame extends JFrame {
 				{
 				case SYS_INFO:
 				{
-					if(scheduler != null)
+					if(dispatcher != null)
 					{
 //						setSystemData(, opacity, opacity, opacity);
 					}
