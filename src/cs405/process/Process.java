@@ -2,6 +2,8 @@ package cs405.process;
 
 import java.util.List;
 
+import cs405.scheduler.SynchronizedCounter;
+
 public class Process {
 	// data given in constructor
 	private int pid; // process id
@@ -10,9 +12,9 @@ public class Process {
 	private int priority; // the priority level of the process
 	private List<Integer> CPUbursts; // the list of CPU bursts
 	private List<Integer> IObursts; // the list of IO bursts
-	
+	private SynchronizedCounter systemTime; // system unit time
+
 	// data calculated or set
-	private int MyCounter; // system unit time
 	private State processState; // the current process state
 	private Integer startTime; // the system time the process is first executed by the CPU, Integer to allow null
 	private Integer finishTime; // the system time the process terminates
@@ -25,13 +27,14 @@ public class Process {
 	private boolean isCurrentIO; // is the process currently the front of the IO queue
 
 	
-	public Process(int id, String name, int arrivalTime, int priority, List<Integer> CPUbursts, List<Integer> IObursts) {
+	public Process(int id, String name, int arrivalTime, int priority, List<Integer> CPUbursts, List<Integer> IObursts, SynchronizedCounter counter) {
 		this.pid = id;
 		this.name = name;
 		this.arrivalTime = arrivalTime;
 		this.priority = priority;
 		this.CPUbursts = CPUbursts;
 		this.IObursts = IObursts;
+		this.systemTime = counter;
 		
 		this.startTime = null;
 		this.finishTime = null;
@@ -114,7 +117,7 @@ public class Process {
 	 */
 	public void setState(State newState) {
 		if (newState == State.TERMINATED) {
-			this.finishTime = this.MyCounter;
+			this.finishTime = this.systemTime.getCount();
 			this.turnaroundTime = this.finishTime - this.arrivalTime;
 		} else if (newState == State.RUNNING && this.currentBurstIndex == 0) { // first CPU
 			this.startTime = this.MyCounter;
@@ -136,7 +139,6 @@ public class Process {
 	 * handles increasing process wait counts and burst progress
 	 */
 	public void incrementCounter() {
-		this.MyCounter++; // update system time
 		// based on previous state, update counters
 		if (this.processState == State.WAITING) { // previously waiting for IO
 			this.IOwait++;
@@ -168,7 +170,7 @@ public class Process {
 			}
 		}
 		// set process to ready if at arrival time
-		if (this.arrivalTime == this.MyCounter) { // system time is now at arrival time
+		if (this.arrivalTime == this.systemTime.getCount()) { // system time is now at arrival time
 			setState(State.READY);
 		}
 	}
