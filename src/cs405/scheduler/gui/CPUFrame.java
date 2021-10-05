@@ -5,7 +5,6 @@ import cs405.process.Process;
 import cs405.scheduler.Dispatcher;
 
 import java.awt.Color;
-import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -39,6 +38,8 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.PlainDocument;
+
+import cs405.scheduler.Scheduler;
 
 /**
  * The main JFrame for the application. Sports many helper methods for updating the elements present in the GUI.
@@ -420,6 +421,22 @@ public class CPUFrame extends JFrame {
 		addToProcessLog("Hopefully it works!");
 	}
 	
+	public void setTableRowData(int row, Object[] data)
+	{
+		for(int i = 0; i < data.length;++i)
+		{
+			processTable.getModel().setValueAt(data[i], row, i);			
+		}
+
+		repaintComponents(GuiComponent.PROCESS_TABLE);
+	}
+	
+	public void setTableCellData(int row, int col, Object data)
+	{
+		processTable.getModel().setValueAt(data, row, col);
+		repaintComponents(GuiComponent.PROCESS_TABLE);
+	}
+	
 	/**
 	 * Sets the data present in the processTable listing the process details.
 	 * 
@@ -489,6 +506,7 @@ public class CPUFrame extends JFrame {
 		
 		processPanel.setHorizontalScrollBar(processPanel.createHorizontalScrollBar());
 		processPanel.setVerticalScrollBar(processPanel.createVerticalScrollBar());
+		repaintComponents(GuiComponent.PROCESS_TABLE);
 	}
 	
 	/**
@@ -516,6 +534,7 @@ public class CPUFrame extends JFrame {
 		}
 		
 		processLog.setText(formatted+"</html>");
+		repaintComponents(GuiComponent.PROCESS_LOG);
 	}
 	
 	/**
@@ -525,6 +544,7 @@ public class CPUFrame extends JFrame {
 	{
 		processLogRaw.clear();
 		processLog.setText("");
+		repaintComponents(GuiComponent.PROCESS_LOG);
 	}
 	
 	/**
@@ -537,6 +557,7 @@ public class CPUFrame extends JFrame {
 	public void setSystemData(int time, double throughput, double turnaround, double wait)
 	{
 		systemDataLabel.setText("System Time: "+time+"\nThroughput: "+throughput+"\nAverage Turnaround: "+turnaround+"\nAverage Wait: " + wait);
+		repaintComponents(GuiComponent.SYS_INFO);
 	}
 	
 	/**
@@ -577,6 +598,69 @@ public class CPUFrame extends JFrame {
 		return (Integer)fpsCombo.getSelectedItem();
 	}
 	
+	/**
+	 * @return the GUI element to display the CPU / IO processing queues.
+	 */
+	public QueuePanel getQueuePanel()
+	{
+		return queuePanel;
+	}
+	
+	/**
+	 * NOTE: This function is called automatically when calling modification functions suchas setTableRowData, setSystemData, wipeProcessLog, etc. Try modifying the GUI without calling this first and see if it works as intended.
+	 * Specify an array of components to repaint, can be comma delimited instead of classical array definition (i.e. repaintComponents(GuiComponent.SYS_INFO, GuiComponent.PROCESS_TABLE) = repaintComponents(new GuiComponent[]{GuiComponent.SYS_INFO, GuiComponent.PROCESS_TABLE})
+	 * @param components the list of GuiComponents to repaint. Leave this blank to repaint all components.
+	 */
+	public void repaintComponents(GuiComponent... components)
+	{
+		if(components.length > 0)
+		{
+			for(GuiComponent comp : components)
+			{
+				switch(comp)
+				{
+				case SYS_INFO:
+				{
+					if(scheduler != null)
+					{
+//						setSystemData(, opacity, opacity, opacity);
+					}
+					systemDataLabel.repaint();
+					break;
+				}
+				case PROCESS_TABLE:
+				{
+					processTable.repaint();
+					break;
+				}
+				case PROCESS_LOG:
+				{
+					processLog.repaint();
+					break;
+				}
+				case QUEUE:
+				{
+					queuePanel.repaint();
+					break;
+				}
+				default:
+				{
+					System.err.println("Invalid component \'"+comp+"\'being updated, please check code");
+				}
+				}
+			}
+		}
+		else
+		{
+			//Repaints all components
+			repaintComponents(GuiComponent.values());
+		}
+	}
+	
+	//									//
+	// This part is related to back-end //
+	//									//
+	
 	//TODO
 	/**
 	 * A placeholder function called when the Step Once button is pressed. To be filled in by backend.
@@ -588,7 +672,7 @@ public class CPUFrame extends JFrame {
 
 	//TODO
 	/**
-	 * A placeholder function called when the Start/Stop button is pressed. To be filled in by backend.
+	 * TODO: A placeholder function called when the Start/Stop button is pressed. To be filled in by backend.
 	 */
 	public void onStartStop()
 	{
@@ -596,20 +680,12 @@ public class CPUFrame extends JFrame {
 	}
 
 	/**
-	 * A placeholder function called when the Load File button is pressed. To be filled in by backend.
+	 * TODO: A placeholder function called when the Load File button is pressed. To be filled in by backend.
 	 */
 	public void onLoadFile(File file)
 	{
 		this.dispatcher.loadFromFile(file);
 		this.addToProcessLog("Loaded file: " + file.getAbsolutePath());
-	}
-
-	/**
-	 * @return the GUI element to display the CPU / IO processing queues.
-	 */
-	public QueuePanel getQueuePanel()
-	{
-		return queuePanel;
 	}
 	
 	/**

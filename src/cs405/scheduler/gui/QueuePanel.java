@@ -9,18 +9,21 @@ import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
+import cs405.process.Burst;
+
 public class QueuePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private String cpuTask = null, ioTask = null;
 	private ArrayList<String> cpuTasks = new ArrayList<String>();
 	private ArrayList<String> ioTasks = new ArrayList<String>();
-
+	private final CPUFrame frame;
+	
 	/**
 	 * Create the panel.
 	 */
-	public QueuePanel() {
+	public QueuePanel(CPUFrame frame) {
 		super();
-		repaint();
+		this.frame = frame;
 	}
 	
 	//Populates the panel with the queue imagery
@@ -158,7 +161,7 @@ public class QueuePanel extends JPanel {
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 */
-	public void drawCentered(Graphics g, String text, float x, float y) {
+	private void drawCentered(Graphics g, String text, float x, float y) {
 	    // Get the FontMetrics
 	    FontMetrics metrics = g.getFontMetrics(g.getFont());
 	    // Determine the X coordinate for the text
@@ -178,6 +181,7 @@ public class QueuePanel extends JPanel {
 	public void setQueuedCPUTasks(ArrayList<String> tasks)
 	{
 		cpuTasks = tasks;
+		frame.repaintComponents(GuiComponent.QUEUE);
 	}
 
 	/**
@@ -187,6 +191,7 @@ public class QueuePanel extends JPanel {
 	public void setQueuedIOTasks(ArrayList<String> tasks)
 	{
 		ioTasks = tasks;
+		frame.repaintComponents(GuiComponent.QUEUE);
 	}
 	
 	/**
@@ -196,6 +201,7 @@ public class QueuePanel extends JPanel {
 	public void setCurrentCPUTask(String task)
 	{
 		cpuTask = task;
+		frame.repaintComponents(GuiComponent.QUEUE);
 	}
 	
 	/**
@@ -205,5 +211,82 @@ public class QueuePanel extends JPanel {
 	public void setCurrentIOTask(String task)
 	{
 		ioTask = task;
+		frame.repaintComponents(GuiComponent.QUEUE);
+	}
+
+	/**
+	 * Moves the CPU queue's head to the current CPU task, and moves the first queued item into the CPU block.
+	 * 
+	 * @return the process string that just exited the CPU.
+	 */
+	public String popCPUTask()
+	{
+		String ret = cpuTask;
+		cpuTask = cpuTasks.remove(0);
+		frame.repaintComponents(GuiComponent.QUEUE);
+		return ret;
+	}
+	
+	/**
+	 * Moves the IO queue's head to the current IO task, and moves the first queued item into the IO block.
+	 * 
+	 * @return the process string that just exited the IO.
+	 */
+	public String popIOTask()
+	{
+		String ret = ioTask;
+		ioTask = ioTasks.remove(0);
+		frame.repaintComponents(GuiComponent.QUEUE);
+		return ret;
+	}
+	
+	/**
+	 * Sets the current specified task, rendered inside the specified block
+	 * @param burst the side to set the current task for
+	 * @param task the current task for the specified to process
+	 */
+	public void setCurrentTask(Burst side, String task)
+	{
+		if(side == Burst.CPU)
+			cpuTask = task;
+		else
+			ioTask = task;			
+		
+		frame.repaintComponents(GuiComponent.QUEUE);
+	}
+	
+	/**
+	 * Sets the queued specified tasks to render next to the specified block.
+	 * @param burst the side to set the list of tasks for 
+	 * @param tasks the list of tasks, in order, for the specified block.
+	 */
+	public void setQueuedTasks(Burst side, ArrayList<String> tasks)
+	{
+		if(side == Burst.CPU)
+			cpuTasks = tasks;
+		else
+			ioTasks = tasks;
+		
+		frame.repaintComponents(GuiComponent.QUEUE);
+	}
+
+	
+	/**
+	 * Moves the specified queue's head to the current specified task, and moves the first queued item into the specified block.
+	 * 
+	 * @param side the queue to pop from
+	 * @return the process string that just exited the IO.
+	 */
+	public String popTask(Burst side)
+	{
+		String ret = side == Burst.CPU ? cpuTask : ioTask;
+		
+		if(side == Burst.CPU)
+			cpuTask = ioTasks.remove(0);			
+		else
+			ioTask = ioTasks.remove(0);
+
+		frame.repaintComponents(GuiComponent.QUEUE);
+		return ret;
 	}
 }
