@@ -4,6 +4,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
+import cs405.scheduler.Dispatcher;
 import cs405.scheduler.SynchronizedCounter;
 
 public class Process {
@@ -15,6 +16,7 @@ public class Process {
 	private List<Integer> CPUbursts; // the list of CPU bursts
 	private List<Integer> IObursts; // the list of IO bursts
 	private SynchronizedCounter systemTime; // system unit time
+	private Dispatcher dispatcher; // the dispatcher
 
 	// data calculated or set
 	private State processState; // the current process state
@@ -29,7 +31,7 @@ public class Process {
 	private boolean isCurrentIO; // is the process currently the front of the IO queue
 
 	
-	public Process(int id, String name, int arrivalTime, int priority, List<Integer> CPUbursts, List<Integer> IObursts, SynchronizedCounter counter) {
+	public Process(int id, String name, int arrivalTime, int priority, List<Integer> CPUbursts, List<Integer> IObursts, SynchronizedCounter counter, Dispatcher dispatcher) {
 		// passed to constructor
 		this.pid = id;
 		this.name = name;
@@ -38,6 +40,7 @@ public class Process {
 		this.CPUbursts = CPUbursts;
 		this.IObursts = IObursts;
 		this.systemTime = counter;
+		this.dispatcher = dispatcher;
 		
 		// increment the counter whenever the systemTime is incremented
 		this.systemTime.addPropertyChangeListener(new PropertyChangeListener() {
@@ -56,6 +59,14 @@ public class Process {
 		this.currentBurstList = Burst.CPU;
 		this.currentBurstIndex = 0;
 		this.isCurrentIO = false;
+	}
+	
+	/**
+	 * gets the processes id
+	 * @return the processes id
+	 */
+	public int getId() {
+		return this.pid;
 	}
 	
 	/**
@@ -169,6 +180,8 @@ public class Process {
 			this.turnaroundTime = this.finishTime - this.arrivalTime;
 		} else if (newState == State.RUNNING && this.currentBurstIndex == 0) { // first CPU
 			this.startTime = this.systemTime.getCount();
+		} if (newState == State.WAITING) { // add to IO queue
+			dispatcher.pushIO(this);
 		}
 		
 		this.processState = newState;
@@ -242,4 +255,5 @@ public class Process {
 			}
 		}
 	}
+
 }
