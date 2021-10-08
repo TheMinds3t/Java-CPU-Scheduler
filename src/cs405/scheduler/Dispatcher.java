@@ -80,49 +80,51 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	}
 
 	public void loadFromFile(File file) {
-		Scanner fileinput;
-		try {
-			fileinput = new Scanner(file);
-		} catch (FileNotFoundException e) {
-			System.err.println("Error: File not found");
-			return;
-		}
-		int index = 0;
-		this.allProcesses = new ArrayList<Process>();
-		while (fileinput.hasNext()) {
-			String line = fileinput.nextLine();
-			String[] params = line.split("\\s+"); // split line on whitespace
-			ArrayList<Integer> cpu = new ArrayList<Integer>(); 
-			ArrayList<Integer> io = new ArrayList<Integer>(); 
-			for (int i = 3; i < params.length; i++) { // params 0-2 are not bursts
-				if (i % 2 == 1) { // every odd i is a cpu burst
-					cpu.add(Integer.parseInt(params[i]));
-				} else { // every even i is an io burst
-					io.add(Integer.parseInt(params[i]));
-				}
-			}
-			Process proc = new Process(index, params[0], Integer.parseInt(params[1]), Integer.parseInt(params[2]), cpu, io, counter, this);
-			this.allProcesses.add(proc);
-			index++;
-		}
-		fileinput.close();
-
-		this.publishProcesses();
-		
-		// TESTING: put process 0 in the IO queue and step until it's done
-		pushIO(allProcesses.get(0));		
-		for (int i = 0; i < 24; i++) {
-			counter.tickUp();
-			// For some reason this does all the sleeping and then updates the gui
-			// instead of updating the gui between every sleep
-			// note: the data does appear to update correctly, it just isn't shown until the end
+		new Thread(()->{
+			Scanner fileinput;
 			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				fileinput = new Scanner(file);
+			} catch (FileNotFoundException e) {
+				System.err.println("Error: File not found");
+				return;
 			}
+			int index = 0;
+			this.allProcesses = new ArrayList<Process>();
+			while (fileinput.hasNext()) {
+				String line = fileinput.nextLine();
+				String[] params = line.split("\\s+"); // split line on whitespace
+				ArrayList<Integer> cpu = new ArrayList<Integer>(); 
+				ArrayList<Integer> io = new ArrayList<Integer>(); 
+				for (int i = 3; i < params.length; i++) { // params 0-2 are not bursts
+					if (i % 2 == 1) { // every odd i is a cpu burst
+						cpu.add(Integer.parseInt(params[i]));
+					} else { // every even i is an io burst
+						io.add(Integer.parseInt(params[i]));
+					}
+				}
+				Process proc = new Process(index, params[0], Integer.parseInt(params[1]), Integer.parseInt(params[2]), cpu, io, counter, this);
+				this.allProcesses.add(proc);
+				index++;
+			}
+			fileinput.close();
+
 			this.publishProcesses();
-		}
+			
+			// TESTING: put process 0 in the IO queue and step until it's done
+			pushIO(allProcesses.get(0));
+			for (int i = 0; i < 24; i++) {
+				counter.tickUp();
+				// For some reason this does all the sleeping and then updates the gui
+				// instead of updating the gui between every sleep
+				// note: the data does appear to update correctly, it just isn't shown until the end
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				this.publishProcesses();
+			}			
+		}).start();
 	}
 	
 	private void publishProcesses() {
