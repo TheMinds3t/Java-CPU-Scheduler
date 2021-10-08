@@ -1,5 +1,6 @@
 package cs405.process;
 
+import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
@@ -59,6 +60,10 @@ public class Process {
 		this.currentBurstList = Burst.CPU;
 		this.currentBurstIndex = 0;
 		this.isCurrentIO = false;
+		
+		// TESTING:
+		this.currentBurstList = Burst.IO;
+		this.processState = State.WAITING;
 	}
 	
 	/**
@@ -110,8 +115,8 @@ public class Process {
 		arr[0] = this.pid;
 		arr[1] = this.arrivalTime;
 		arr[2] = this.priority;
-		arr[3] = this.CPUbursts.toString();
-		arr[4] = this.IObursts.toString();
+		arr[3] = getBurstInfo(this.CPUbursts);
+		arr[4] = getBurstInfo(this.IObursts);
 		arr[5] = this.startTime;
 		arr[6] = this.finishTime;
 		arr[7] = this.CPUwait;
@@ -121,6 +126,20 @@ public class Process {
 		return arr;
 	}
 	
+	private String getBurstInfo(List<Integer> list) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < list.size(); i++) {
+			if (currentBurstIndex > i) { // already did burst
+				sb.append("0/" + list.get(i));
+			} else if (currentBurstIndex == i) {
+				sb.append((list.get(i) - burstCompletion) + "/" + list.get(i));
+			} else {
+				sb.append(list.get(i) + "/" + list.get(i));
+			}
+			sb.append(" ");
+		}
+		return sb.toString();
+	}
 	/**
 	 * For testing purposes.
 	 * Prints the data from the process
@@ -173,19 +192,19 @@ public class Process {
 	 * sets a new process state and information that changes on state change
 	 * @param newState - the State the process is switched to
 	 */
-	private void setState(State newState) {
+	public void setState(State newState) {
+		this.isCurrentIO = false;
+		this.processState = newState;
+
 		if (newState == State.TERMINATED) {
 			// TODO: tell process log process has terminated, print turnaround + wait times
 			this.finishTime = this.systemTime.getCount();
 			this.turnaroundTime = this.finishTime - this.arrivalTime;
 		} else if (newState == State.RUNNING && this.currentBurstIndex == 0) { // first CPU
 			this.startTime = this.systemTime.getCount();
-		} if (newState == State.WAITING) { // add to IO queue
+		} else if (newState == State.WAITING) { // add to IO queue
 			dispatcher.pushIO(this);
 		}
-		
-		this.processState = newState;
-		this.isCurrentIO = false;
 	}
 	
 	/**
@@ -202,6 +221,7 @@ public class Process {
 				this.currentBurstList = Burst.CPU;
 				this.burstCompletion = 0;
 				this.currentBurstIndex++; 
+				this.dispatcher.popIO(this);
 				setState(State.READY);
 			}
 		}
@@ -251,7 +271,7 @@ public class Process {
 			// set process to ready if at arrival time
 			if (this.arrivalTime == this.systemTime.getCount()) { // system time is now at arrival time
 				setState(State.READY);
-				// TODO: Tell process log Process has arrived
+				this.dispatcher.addToProcessLog("Process " + this.pid + " arrived at time " + this.systemTime, Color.GREEN);
 			}
 		}
 	}
