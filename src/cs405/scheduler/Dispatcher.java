@@ -11,9 +11,11 @@ import cs405.scheduler.gui.CPUFrame;
 public class Dispatcher { // tells the scheduler when it needs to work
 	private ArrayList<Process> allProcesses;
 	private CPUFrame gui;
+	private SynchronizedCounter counter;
 	
 	Dispatcher(){
 		this.gui = new CPUFrame(this);
+		this.counter = new SynchronizedCounter();
 	}
 	
 	public void startGui() {
@@ -42,7 +44,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 					io.add(Integer.parseInt(params[i]));
 				}
 			}
-			Process proc = new Process(index, params[0], Integer.parseInt(params[1]), Integer.parseInt(params[2]), cpu, io);
+			Process proc = new Process(index, params[0], Integer.parseInt(params[1]), Integer.parseInt(params[2]), cpu, io, counter);
 			this.allProcesses.add(proc);
 			index++;
 		}

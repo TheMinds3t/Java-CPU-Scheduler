@@ -1,6 +1,10 @@
 package cs405.process;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
+
+import cs405.scheduler.SynchronizedCounter;
 
 public class Process {
 	// data given in constructor
@@ -10,9 +14,9 @@ public class Process {
 	private int priority; // the priority level of the process
 	private List<Integer> CPUbursts; // the list of CPU bursts
 	private List<Integer> IObursts; // the list of IO bursts
-	
+	private SynchronizedCounter systemTime; // system unit time
+
 	// data calculated or set
-	private int MyCounter; // system unit time
 	private State processState; // the current process state
 	private Integer startTime; // the system time the process is first executed by the CPU, Integer to allow null
 	private Integer finishTime; // the system time the process terminates
@@ -20,22 +24,32 @@ public class Process {
 	private int IOwait; // the total time waiting in the IO queue (time WAITING)
 	private int turnaroundTime; // the total execution time of a process (finishTime - arrivalTime)
 	private Burst currentBurstList; // which list is currently being worked on
-	private int currentBurstIndex; // which element of the list is currently being worked on
+	private int currentBurstIndex; // how many IO bursts have been completed
 	private int burstCompletion; // how much of the burst has been completed
 	private boolean isCurrentIO; // is the process currently the front of the IO queue
 
 	
-	public Process(int id, String name, int arrivalTime, int priority, List<Integer> CPUbursts, List<Integer> IObursts) {
+	public Process(int id, String name, int arrivalTime, int priority, List<Integer> CPUbursts, List<Integer> IObursts, SynchronizedCounter counter) {
+		// passed to constructor
 		this.pid = id;
 		this.name = name;
 		this.arrivalTime = arrivalTime;
 		this.priority = priority;
 		this.CPUbursts = CPUbursts;
 		this.IObursts = IObursts;
+		this.systemTime = counter;
 		
+		// increment the counter whenever the systemTime is incremented
+		this.systemTime.addPropertyChangeListener(new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				incrementCounter();
+			}
+		});
+		
+		// set
 		this.startTime = null;
 		this.finishTime = null;
-		this.MyCounter = 0;
 		this.processState = State.NEW;
 		this.CPUwait = 0;
 		this.IOwait = 0;
@@ -52,10 +66,18 @@ public class Process {
 		return this.priority;
 	}
 	
+	/**
+	 * gets the processes arrival time
+	 * @return the processes arrival time
+	 */
 	public int getArrivalTime() {
 		return this.arrivalTime;
 	}
 	
+	/**
+	 * gets the next cpu burst, or how much is left of the current burst if it's RUNNING
+	 * @return the processes cpu burst
+	 */
 	public int getNextCPUBurst() {
 		if (this.processState == State.RUNNING) { // currently working on CPU
 			return this.CPUbursts.get(this.currentBurstIndex) - this.burstCompletion;
@@ -67,9 +89,8 @@ public class Process {
 	}
 	
 	/**
-	 * TODO
-	 * gets the list of process information
-	 * @return a string with all process information
+	 * Gets the process information for the gui table
+	 * @return an array with all process information
 	 */
 	public Object[] getInformation() {
 		// {ID (int), Arrival (int), Priority (int), CPU Bursts (String), I/O Bursts (String), Start Time (int), End Time (int), Wait Time (int), Wait I/O Time (int), Status (String)}
@@ -89,6 +110,10 @@ public class Process {
 		return arr;
 	}
 	
+	/**
+	 * For testing purposes.
+	 * Prints the data from the process
+	 */
 	public String toString() {
 		Object[] arr = this.getInformation();
 		StringBuilder sb = new StringBuilder();
@@ -109,15 +134,41 @@ public class Process {
 	}
 	
 	/**
+	 * Sets the process from RUNNING to READY and prints a message to the log
+	 */
+	public void preempt() {
+		setState(State.READY);
+		// TODO: print to process log a preempt message
+	}
+	
+	/**
+	 * Sets the process from READY to RUNNING and prints a message to the log
+	 * Note: Process will not work on the CPU burst until the next tick up
+	 */
+	public void setCPU() {
+		setState(State.RUNNING);
+		// TODO: print to process log a message
+	}
+	
+	/**
+	 * Tells the process it is at the head of the IO queue so it can mark progress
+	 * Note: Process will not work on the IO burst until the next tick up
+	 */
+	public void setIO() {
+		this.isCurrentIO = true;
+	}
+	
+	/**
 	 * sets a new process state and information that changes on state change
 	 * @param newState - the State the process is switched to
 	 */
-	public void setState(State newState) {
+	private void setState(State newState) {
 		if (newState == State.TERMINATED) {
-			this.finishTime = this.MyCounter;
+			// TODO: tell process log process has terminated, print turnaround + wait times
+			this.finishTime = this.systemTime.getCount();
 			this.turnaroundTime = this.finishTime - this.arrivalTime;
 		} else if (newState == State.RUNNING && this.currentBurstIndex == 0) { // first CPU
-			this.startTime = this.MyCounter;
+			this.startTime = this.systemTime.getCount();
 		}
 		
 		this.processState = newState;
@@ -125,51 +176,70 @@ public class Process {
 	}
 	
 	/**
-	 *  tells the process it is currently the head of the IO queue so it can mark progress
+	 * Process handles having spent a tick WAITING 
+	 * WAITING refers to waiting for IO and includes being at the front of the IO queue
 	 */
-	public void setCurrentIO() {
-		this.isCurrentIO = true;
+	private void waiting() {
+		this.IOwait++;
+		if (this.isCurrentIO) { 
+			// Head of IO queue, so got response from IO
+			this.burstCompletion++;
+			if (this.burstCompletion == this.IObursts.get(currentBurstIndex)) {
+				// finished IO, go back to CPU
+				this.currentBurstList = Burst.CPU;
+				this.burstCompletion = 0;
+				this.currentBurstIndex++; 
+				setState(State.READY);
+			}
+		}
+	}
+	
+	/**
+	 * Process handles having spent a tick READY 
+	 * READY refers to waiting for CPU but not at the front of the CPU queue (see running)
+	 */
+	private void ready() {
+		this.CPUwait++;
+	}
+	
+	/**
+	 * Process handles having spent a tick RUNNING 
+	 * RUNNING refers to being actively on the CPU
+	 */
+	private void running() {
+		this.burstCompletion++;
+		if (this.burstCompletion == this.CPUbursts.get(this.currentBurstIndex)) {
+			// finished CPU burst, move onto next IO burst or terminate
+			if (this.currentBurstIndex < IObursts.size()) {
+				// there is an IO burst, switch to IO
+				this.currentBurstList = Burst.IO;
+				this.burstCompletion = 0;
+				setState(State.WAITING);
+			} else {
+				// there is no more IO, last CPU burst just finished
+				setState(State.TERMINATED);
+			}
+		}
 	}
 	
 	/**
 	 * increments the processes system time by one.
 	 * handles increasing process wait counts and burst progress
 	 */
-	public void incrementCounter() {
-		this.MyCounter++; // update system time
+	private void incrementCounter() {
 		// based on previous state, update counters
 		if (this.processState == State.WAITING) { // previously waiting for IO
-			this.IOwait++;
-			if (this.isCurrentIO) { // previously did IO
-				this.burstCompletion++;
-				if (this.burstCompletion == this.IObursts.get(currentBurstIndex)) {
-					// finished IO, go back to CPU
-					this.currentBurstList = Burst.CPU;
-					this.burstCompletion = 0;
-					this.currentBurstIndex++;
-					setState(State.READY);
-				}
-			}
+			this.waiting();
 		} else if (this.processState == State.READY) { // previously waiting for CPU
-			this.CPUwait++;
+			this.ready();
 		} else if (this.processState == State.RUNNING) { // previously running on CPU
-			this.burstCompletion++;
-			if (this.burstCompletion == this.CPUbursts.get(this.currentBurstIndex)) {
-				// finished CPU burst i, move onto IO burst i or terminate
-				if (IObursts.size() >= this.currentBurstIndex) {
-					// there is an IO burst, prepare for IO
-					this.currentBurstList = Burst.IO;
-					this.burstCompletion = 0;
-					setState(State.WAITING);
-				} else {
-					// there is no more IO, last CPU burst just finished
-					setState(State.TERMINATED);
-				}
+			this.running();
+		} else if (this.processState == State.NEW) {
+			// set process to ready if at arrival time
+			if (this.arrivalTime == this.systemTime.getCount()) { // system time is now at arrival time
+				setState(State.READY);
+				// TODO: Tell process log Process has arrived
 			}
-		}
-		// set process to ready if at arrival time
-		if (this.arrivalTime == this.MyCounter) { // system time is now at arrival time
-			setState(State.READY);
 		}
 	}
 }
