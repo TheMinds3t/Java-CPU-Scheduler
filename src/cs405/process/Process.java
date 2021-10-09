@@ -1,9 +1,11 @@
 package cs405.process;
 
+import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
+import cs405.scheduler.Dispatcher;
 import cs405.scheduler.SynchronizedCounter;
 
 public class Process {
@@ -15,6 +17,7 @@ public class Process {
 	private List<Integer> CPUbursts; // the list of CPU bursts
 	private List<Integer> IObursts; // the list of IO bursts
 	private SynchronizedCounter systemTime; // system unit time
+	private Dispatcher dispatcher; // the dispatcher
 
 	// data calculated or set
 	private State processState; // the current process state
@@ -23,39 +26,47 @@ public class Process {
 	private int CPUwait; // the total time waiting in the CPU queue (time READY)
 	private int IOwait; // the total time waiting in the IO queue (time WAITING)
 	private int turnaroundTime; // the total execution time of a process (finishTime - arrivalTime)
-	private Burst currentBurstList; // which list is currently being worked on
 	private int currentBurstIndex; // how many IO bursts have been completed
 	private int burstCompletion; // how much of the burst has been completed
 	private boolean isCurrentIO; // is the process currently the front of the IO queue
 
 	
-	public Process(int id, String name, int arrivalTime, int priority, List<Integer> CPUbursts, List<Integer> IObursts, SynchronizedCounter counter) {
+	public Process(int id, String name, int arrivalTime, int priority, List<Integer> CPUbursts, List<Integer> IObursts, SynchronizedCounter counter, Dispatcher dispatcher) {
 		// passed to constructor
-		this.pid = id;
+		pid = id;
 		this.name = name;
 		this.arrivalTime = arrivalTime;
 		this.priority = priority;
 		this.CPUbursts = CPUbursts;
 		this.IObursts = IObursts;
-		this.systemTime = counter;
+		systemTime = counter;
+		this.dispatcher = dispatcher;
 		
 		// increment the counter whenever the systemTime is incremented
-		this.systemTime.addPropertyChangeListener(new PropertyChangeListener() {
+		systemTime.addPropertyChangeListener(new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				incrementCounter();
 			}
 		});
 		
-		// set
-		this.startTime = null;
-		this.finishTime = null;
-		this.processState = State.NEW;
-		this.CPUwait = 0;
-		this.IOwait = 0;
-		this.currentBurstList = Burst.CPU;
-		this.currentBurstIndex = 0;
-		this.isCurrentIO = false;
+		// set data
+		startTime = null;
+		finishTime = null;
+		processState = State.NEW;
+		CPUwait = 0;
+		IOwait = 0;
+		currentBurstIndex = 0;
+		isCurrentIO = false;
+		turnaroundTime = 0;
+	}
+	
+	/**
+	 * gets the processes id
+	 * @return the processes id
+	 */
+	public int getId() {
+		return pid;
 	}
 	
 	/**
@@ -63,7 +74,7 @@ public class Process {
 	 * @return the processes priority
 	 */
 	public int getPriority() {
-		return this.priority;
+		return priority;
 	}
 	
 	/**
@@ -71,7 +82,23 @@ public class Process {
 	 * @return the processes arrival time
 	 */
 	public int getArrivalTime() {
-		return this.arrivalTime;
+		return arrivalTime;
+	}
+	
+	/**
+	 * gets the processes state
+	 * @return the processes state
+	 */
+	public State getState() {
+		return processState;
+	}
+	
+	public int getTurnaround() {
+		return turnaroundTime;
+	}
+	
+	public int getWait() {
+		return CPUwait;
 	}
 	
 	/**
@@ -79,12 +106,12 @@ public class Process {
 	 * @return the processes cpu burst
 	 */
 	public int getNextCPUBurst() {
-		if (this.processState == State.RUNNING) { // currently working on CPU
-			return this.CPUbursts.get(this.currentBurstIndex) - this.burstCompletion;
-		} else if (this.processState == State.WAITING) { // after working on CPU
-			return this.CPUbursts.get(this.currentBurstIndex + 1);
+		if (processState == State.RUNNING) { // currently working on CPU
+			return CPUbursts.get(currentBurstIndex) - burstCompletion;
+		} else if (processState == State.WAITING) { // after working on CPU
+			return CPUbursts.get(currentBurstIndex + 1);
 		} else { // before working on CPU
-			return this.CPUbursts.get(this.currentBurstIndex);
+			return CPUbursts.get(currentBurstIndex);
 		}
 	}
 	
@@ -96,26 +123,40 @@ public class Process {
 		// {ID (int), Arrival (int), Priority (int), CPU Bursts (String), I/O Bursts (String), Start Time (int), End Time (int), Wait Time (int), Wait I/O Time (int), Status (String)}
 
 		Object[] arr = new Object[10];
-		arr[0] = this.pid;
-		arr[1] = this.arrivalTime;
-		arr[2] = this.priority;
-		arr[3] = this.CPUbursts.toString();
-		arr[4] = this.IObursts.toString();
-		arr[5] = this.startTime;
-		arr[6] = this.finishTime;
-		arr[7] = this.CPUwait;
-		arr[8] = this.IOwait;
-		arr[9] = this.processState;
+		arr[0] = pid;
+		arr[1] = arrivalTime;
+		arr[2] = priority;
+		arr[3] = getBurstInfo(CPUbursts);
+		arr[4] = getBurstInfo(IObursts);
+		arr[5] = startTime;
+		arr[6] = finishTime;
+		arr[7] = CPUwait;
+		arr[8] = IOwait;
+		arr[9] = processState;
 		
 		return arr;
 	}
 	
+	private String getBurstInfo(List<Integer> list) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < list.size(); i++) {
+			if (currentBurstIndex > i) { // already did burst
+				sb.append("0/" + list.get(i));
+			} else if (currentBurstIndex == i) {
+				sb.append((list.get(i) - burstCompletion) + "/" + list.get(i));
+			} else {
+				sb.append(list.get(i) + "/" + list.get(i));
+			}
+			sb.append(" ");
+		}
+		return sb.toString();
+	}
 	/**
 	 * For testing purposes.
 	 * Prints the data from the process
 	 */
 	public String toString() {
-		Object[] arr = this.getInformation();
+		Object[] arr = getInformation();
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < arr.length - 1; i++) {
 			if (arr[i] != null) {
@@ -155,24 +196,26 @@ public class Process {
 	 * Note: Process will not work on the IO burst until the next tick up
 	 */
 	public void setIO() {
-		this.isCurrentIO = true;
+		isCurrentIO = true;
 	}
 	
 	/**
 	 * sets a new process state and information that changes on state change
 	 * @param newState - the State the process is switched to
 	 */
-	private void setState(State newState) {
+	public void setState(State newState) {
+		isCurrentIO = false;
+		processState = newState;
+
 		if (newState == State.TERMINATED) {
 			// TODO: tell process log process has terminated, print turnaround + wait times
-			this.finishTime = this.systemTime.getCount();
-			this.turnaroundTime = this.finishTime - this.arrivalTime;
-		} else if (newState == State.RUNNING && this.currentBurstIndex == 0) { // first CPU
-			this.startTime = this.systemTime.getCount();
+			finishTime = systemTime.getCount();
+			turnaroundTime = finishTime - arrivalTime;
+		} else if (newState == State.RUNNING && currentBurstIndex == 0) { // first CPU
+			startTime = systemTime.getCount();
+		} else if (newState == State.WAITING) { // add to IO queue
+			dispatcher.pushIO(this);
 		}
-		
-		this.processState = newState;
-		this.isCurrentIO = false;
 	}
 	
 	/**
@@ -180,15 +223,15 @@ public class Process {
 	 * WAITING refers to waiting for IO and includes being at the front of the IO queue
 	 */
 	private void waiting() {
-		this.IOwait++;
-		if (this.isCurrentIO) { 
+		IOwait++;
+		if (isCurrentIO) { 
 			// Head of IO queue, so got response from IO
-			this.burstCompletion++;
-			if (this.burstCompletion == this.IObursts.get(currentBurstIndex)) {
+			burstCompletion++;
+			if (burstCompletion == IObursts.get(currentBurstIndex)) {
 				// finished IO, go back to CPU
-				this.currentBurstList = Burst.CPU;
-				this.burstCompletion = 0;
-				this.currentBurstIndex++; 
+				burstCompletion = 0;
+				currentBurstIndex++; 
+				dispatcher.popIO(this);
 				setState(State.READY);
 			}
 		}
@@ -199,7 +242,7 @@ public class Process {
 	 * READY refers to waiting for CPU but not at the front of the CPU queue (see running)
 	 */
 	private void ready() {
-		this.CPUwait++;
+		CPUwait++;
 	}
 	
 	/**
@@ -207,13 +250,12 @@ public class Process {
 	 * RUNNING refers to being actively on the CPU
 	 */
 	private void running() {
-		this.burstCompletion++;
-		if (this.burstCompletion == this.CPUbursts.get(this.currentBurstIndex)) {
+		burstCompletion++;
+		if (burstCompletion == CPUbursts.get(currentBurstIndex)) {
 			// finished CPU burst, move onto next IO burst or terminate
-			if (this.currentBurstIndex < IObursts.size()) {
+			if (currentBurstIndex < IObursts.size()) {
 				// there is an IO burst, switch to IO
-				this.currentBurstList = Burst.IO;
-				this.burstCompletion = 0;
+				burstCompletion = 0;
 				setState(State.WAITING);
 			} else {
 				// there is no more IO, last CPU burst just finished
@@ -228,18 +270,19 @@ public class Process {
 	 */
 	private void incrementCounter() {
 		// based on previous state, update counters
-		if (this.processState == State.WAITING) { // previously waiting for IO
-			this.waiting();
-		} else if (this.processState == State.READY) { // previously waiting for CPU
-			this.ready();
-		} else if (this.processState == State.RUNNING) { // previously running on CPU
-			this.running();
-		} else if (this.processState == State.NEW) {
+		if (processState == State.WAITING) { // previously waiting for IO
+			waiting();
+		} else if (processState == State.READY) { // previously waiting for CPU
+			ready();
+		} else if (processState == State.RUNNING) { // previously running on CPU
+			running();
+		} else if (processState == State.NEW) {
 			// set process to ready if at arrival time
-			if (this.arrivalTime == this.systemTime.getCount()) { // system time is now at arrival time
+			if (arrivalTime == systemTime.getCount()) { // system time is now at arrival time
 				setState(State.READY);
-				// TODO: Tell process log Process has arrived
+				dispatcher.addToProcessLog("Process " + pid + " arrived at time " + systemTime.getCount(), Color.GREEN);
 			}
 		}
 	}
+
 }

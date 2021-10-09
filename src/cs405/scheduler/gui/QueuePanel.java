@@ -32,19 +32,6 @@ public class QueuePanel extends JPanel {
 		super.paintComponent(g);
 		Graphics2D graphics = (Graphics2D)g;
 
-		ioTasks.clear();
-		cpuTasks.clear();
-		cpuTasks.add("P1");
-		cpuTasks.add("P2");
-//		cpuTasks.add("P2");
-		ioTasks.add("P3");
-//		ioTasks.add("P4");
-		ioTask = null;
-		cpuTask = null;
-		ioTask = "P5";
-		cpuTask = "P6";
-
-		
 		//define constants
 		int x = getX();
 		int y = getY();

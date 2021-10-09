@@ -1,9 +1,5 @@
 package cs405.scheduler.gui;
 
-import cs405.process.*;
-import cs405.process.Process;
-import cs405.scheduler.Dispatcher;
-
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -29,6 +25,7 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AttributeSet;
@@ -37,7 +34,7 @@ import javax.swing.text.Document;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.PlainDocument;
 
-import cs405.scheduler.Scheduler;
+import cs405.scheduler.Dispatcher;
 
 /**
  * The main JFrame for the application. Sports many helper methods for updating the elements present in the GUI.
@@ -48,6 +45,7 @@ public class CPUFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTable processTable;
+	private String[] processTableColumnNames = new String[]{"ID", "Arrival", "Priority", "CPU Bursts", "I/O Bursts", "Start Time", "End Time", "Wait Time", "Wait I/O Time", "Status"};
 	private JScrollPane processPanel;
 	private JTextPane systemDataLabel;
 	private JTextField qField;
@@ -60,11 +58,12 @@ public class CPUFrame extends JFrame {
 	
 	private ArrayList<ProcessLogEntry> processLogRaw = new ArrayList<ProcessLogEntry>();
 	
+
 	/**
 	 * Create the frame.
 	 */
 	public CPUFrame(Dispatcher dispatch) {
-		this.dispatcher = dispatch;
+		dispatcher = dispatch;
 		setBackground(Color.GRAY);
 		setAlwaysOnTop(true);
 		setResizable(false);
@@ -305,6 +304,7 @@ public class CPUFrame extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				JFileChooser chooser = new JFileChooser();
+				chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
 				int result = chooser.showOpenDialog(CPUFrame.this);
 				
 				if(result == JFileChooser.APPROVE_OPTION)
@@ -322,7 +322,7 @@ public class CPUFrame extends JFrame {
 		gbc_systemInfoLabel.gridx = 0;
 		gbc_systemInfoLabel.gridy = 5;
 		panel.add(systemInfoLabel, gbc_systemInfoLabel);
-		setSystemData(1,1,1,1);
+		setSystemData(0,0,0,0);
 		
 		JPanel queuesPanel = new JPanel();
 		queuesPanel.setBackground(Color.GRAY);
@@ -373,7 +373,7 @@ public class CPUFrame extends JFrame {
 		processTable.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		processPanel.setViewportView(processTable.getTableHeader());
 		processPanel.setViewportView(processTable);
-		setTableData(null);
+		initializeTable(null);
 		processTable.setFillsViewportHeight(true);
 		processTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		
@@ -415,8 +415,6 @@ public class CPUFrame extends JFrame {
 		processLog.setContentType("text/html");
 		scrollPane.setViewportView(processLog);
 		
-		addToProcessLog("testing this dang text pane", Color.red);
-		addToProcessLog("Hopefully it works!");
 	}
 	
 	public void setTableRowData(int row, Object[] data)
@@ -426,38 +424,29 @@ public class CPUFrame extends JFrame {
 			processTable.getModel().setValueAt(data[i], row, i);			
 		}
 
+		processTable.revalidate();
 		repaintComponents(GuiComponent.PROCESS_TABLE);
 	}
 	
 	public void setTableCellData(int row, int col, Object data)
 	{
 		processTable.getModel().setValueAt(data, row, col);
+		processTable.revalidate();
 		repaintComponents(GuiComponent.PROCESS_TABLE);
 	}
 	
-	/**
-	 * Sets the data present in the processTable listing the process details.
-	 * 
-	 * Format of data:
-	 * 		Array of rows, each second dimension is the following:
-	 * 			{ID (int), Arrival (int), Priority (int), CPU Bursts (String), I/O Bursts (String), Start Time (int), End Time (int), Wait Time (int), Wait I/O Time (int), Status (String)}
-	 * Values can be null to specify an empty cell.
-	 * @param data the 2d array to specify the rows to add
-	 */
-	@SuppressWarnings("rawtypes")
-	public void setTableData(Object[][] data)
+	private void initializeTable(Object[][] data)
 	{
 		processTable.setModel(new DefaultTableModel(
 				data == null ? new Object[][] { //Data
 					{null, null, null, null, null, null, null, null, null, null},
 				} : data,
-				new String[] { //Headers
-					"ID", "Arrival", "Priority", "CPU Bursts", "I/O Bursts", "Start Time", "End Time", "Wait Time", "Wait I/O Time", "Status"
-				}) 
+				processTableColumnNames) 
 			{
 				private static final long serialVersionUID = 1L;
 				
 				//Constrains input to certain data types
+				@SuppressWarnings("rawtypes")
 				Class[] columnTypes = new Class[] {
 					Integer.class, Integer.class, Integer.class, String.class, String.class, Integer.class, Integer.class, Integer.class, Integer.class, String.class
 				};
@@ -504,6 +493,23 @@ public class CPUFrame extends JFrame {
 		
 		processPanel.setHorizontalScrollBar(processPanel.createHorizontalScrollBar());
 		processPanel.setVerticalScrollBar(processPanel.createVerticalScrollBar());
+	}
+	
+	/**
+	 * Sets the data present in the processTable listing the process details.
+	 * 
+	 * Format of data:
+	 * 		Array of rows, each second dimension is the following:
+	 * 			{ID (int), Arrival (int), Priority (int), CPU Bursts (String), I/O Bursts (String), Start Time (int), End Time (int), Wait Time (int), Wait I/O Time (int), Status (String)}
+	 * Values can be null to specify an empty cell.
+	 * @param data the 2d array to specify the rows to add
+	 */
+	public void setTableData(Object[][] data)
+	{
+		DefaultTableModel model = (DefaultTableModel) processTable.getModel();
+		model.setDataVector(data, processTableColumnNames);
+		
+		processTable.revalidate();
 		repaintComponents(GuiComponent.PROCESS_TABLE);
 	}
 	
@@ -628,6 +634,7 @@ public class CPUFrame extends JFrame {
 				}
 				case PROCESS_TABLE:
 				{
+					SwingUtilities.invokeLater	(()->processTable.repaint());
 					processTable.repaint();
 					break;
 				}
@@ -665,7 +672,7 @@ public class CPUFrame extends JFrame {
 	 */
 	public void onStepOnce()
 	{
-		System.out.println("Stepped once! please fill this method out, or let me know once backend has a callback for this.");
+		dispatcher.tickUp();
 	}
 
 	//TODO
@@ -674,7 +681,7 @@ public class CPUFrame extends JFrame {
 	 */
 	public void onStartStop()
 	{
-		System.out.println("Started/Stopped! please fill this method out, or let me know once backend has a callback for this.");
+		dispatcher.toggleStart(getSelectedFrameRate());
 	}
 
 	/**
@@ -682,8 +689,8 @@ public class CPUFrame extends JFrame {
 	 */
 	public void onLoadFile(File file)
 	{
-		this.dispatcher.loadFromFile(file);
-		this.addToProcessLog("Loaded file: " + file.getAbsolutePath());
+		dispatcher.loadFromFile(file);
+		addToProcessLog("Loaded file: " + file.getAbsolutePath());
 	}
 	
 	/**
