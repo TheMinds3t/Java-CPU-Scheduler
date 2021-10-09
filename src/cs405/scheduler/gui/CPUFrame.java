@@ -674,7 +674,7 @@ public class CPUFrame extends JFrame {
 	 */
 	public void onStepOnce()
 	{
-		System.out.println("Stepped once! please fill this method out, or let me know once backend has a callback for this.");
+		dispatcher.tickUp();
 	}
 
 	//TODO
@@ -683,7 +683,8 @@ public class CPUFrame extends JFrame {
 	 */
 	public void onStartStop()
 	{
-		System.out.println("Started/Stopped! please fill this method out, or let me know once backend has a callback for this.");
+		dispatcher.toggleStart();
+		dispatcher.ticking(getSelectedFrameRate());
 	}
 
 	/**

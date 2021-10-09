@@ -60,6 +60,7 @@ public class Process {
 		this.currentBurstList = Burst.CPU;
 		this.currentBurstIndex = 0;
 		this.isCurrentIO = false;
+		turnaroundTime = 0;
 	}
 	
 	/**
@@ -84,6 +85,22 @@ public class Process {
 	 */
 	public int getArrivalTime() {
 		return this.arrivalTime;
+	}
+	
+	/**
+	 * gets the processes state
+	 * @return the processes state
+	 */
+	public State getState() {
+		return this.processState;
+	}
+	
+	public int getTurnaround() {
+		return turnaroundTime;
+	}
+	
+	public int getWait() {
+		return CPUwait;
 	}
 	
 	/**
@@ -267,7 +284,7 @@ public class Process {
 			// set process to ready if at arrival time
 			if (this.arrivalTime == this.systemTime.getCount()) { // system time is now at arrival time
 				setState(State.READY);
-				this.dispatcher.addToProcessLog("Process " + this.pid + " arrived at time " + this.systemTime, Color.GREEN);
+				this.dispatcher.addToProcessLog("Process " + this.pid + " arrived at time " + this.systemTime.getCount(), Color.GREEN);
 			}
 		}
 	}

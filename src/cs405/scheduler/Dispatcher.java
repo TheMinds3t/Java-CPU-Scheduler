@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 import cs405.process.Process;
+import cs405.process.State;
 import cs405.scheduler.gui.CPUFrame;
 
 public class Dispatcher { // tells the scheduler when it needs to work
@@ -15,15 +16,80 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	private LinkedList<Process> IOqueue;
 	private CPUFrame gui;
 	private SynchronizedCounter counter;
+	private boolean started;
 	
 	Dispatcher(){
 		this.gui = new CPUFrame(this);
 		this.counter = new SynchronizedCounter();
 		this.IOqueue = new LinkedList<Process>();
+		started = false;
+	}
+	
+	public void toggleStart() {
+		started = !started;
 	}
 	
 	public void startGui() {
 		this.gui.setVisible(true);
+	}
+	
+	public void ticking(int FPS) {
+		new Thread(()->{
+			while (started) {
+				tickUp();
+				try {
+					Thread.sleep(1000 / FPS);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}).start();
+	}
+	public void tickUp() {
+		counter.tickUp();
+		publishProcesses();
+		gui.setSystemData(counter.getCount(), getTroughput(), getTurnaround(), getWait());
+	}
+	
+	private double getTroughput() {
+		if (counter.getCount() == 0) {
+			return 0;
+		} else {
+			int finished = 0;
+			for (int i = 0; i < allProcesses.size(); i++) {
+				if (allProcesses.get(i).getState() == State.TERMINATED) {
+					finished++;
+				}
+			}
+			return finished / (double)(counter.getCount());
+		}
+	}
+	
+	private double getTurnaround() {
+		int count = 0;
+		int totalTime = 0;
+		for (int i = 0; i < allProcesses.size(); i++) {
+			if (allProcesses.get(i).getState() == State.TERMINATED) {
+				count++;
+				totalTime += allProcesses.get(i).getTurnaround();
+			}
+		}
+		if (count == 0) { // if no processes are finished, display 0
+			return 0;
+		}
+		return totalTime / (double)(count); // return average turnaround time
+	}
+	
+	private double getWait() {
+		int totalTime = 0;
+		for (int i = 0; i < allProcesses.size(); i++) {
+			totalTime += allProcesses.get(i).getWait();
+		}
+		if (allProcesses.size() == 0) { // if no processes are loaded, display 0
+			return 0;
+		}
+		return totalTime / (double)(allProcesses.size()); // return average wait time
 	}
 	
 	/**
