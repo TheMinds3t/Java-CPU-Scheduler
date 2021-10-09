@@ -63,7 +63,7 @@ public class CPUFrame extends JFrame {
 	 * Create the frame.
 	 */
 	public CPUFrame(Dispatcher dispatch) {
-		this.dispatcher = dispatch;
+		dispatcher = dispatch;
 		setBackground(Color.GRAY);
 		setAlwaysOnTop(true);
 		setResizable(false);
@@ -322,7 +322,7 @@ public class CPUFrame extends JFrame {
 		gbc_systemInfoLabel.gridx = 0;
 		gbc_systemInfoLabel.gridy = 5;
 		panel.add(systemInfoLabel, gbc_systemInfoLabel);
-		setSystemData(1,1,1,1);
+		setSystemData(0,0,0,0);
 		
 		JPanel queuesPanel = new JPanel();
 		queuesPanel.setBackground(Color.GRAY);
@@ -415,8 +415,6 @@ public class CPUFrame extends JFrame {
 		processLog.setContentType("text/html");
 		scrollPane.setViewportView(processLog);
 		
-		addToProcessLog("testing this dang text pane", Color.red);
-		addToProcessLog("Hopefully it works!");
 	}
 	
 	public void setTableRowData(int row, Object[] data)
@@ -683,8 +681,7 @@ public class CPUFrame extends JFrame {
 	 */
 	public void onStartStop()
 	{
-		dispatcher.toggleStart();
-		dispatcher.ticking(getSelectedFrameRate());
+		dispatcher.toggleStart(getSelectedFrameRate());
 	}
 
 	/**
@@ -692,8 +689,8 @@ public class CPUFrame extends JFrame {
 	 */
 	public void onLoadFile(File file)
 	{
-		this.dispatcher.loadFromFile(file);
-		this.addToProcessLog("Loaded file: " + file.getAbsolutePath());
+		dispatcher.loadFromFile(file);
+		addToProcessLog("Loaded file: " + file.getAbsolutePath());
 	}
 	
 	/**

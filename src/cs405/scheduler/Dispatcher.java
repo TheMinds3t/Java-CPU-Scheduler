@@ -19,33 +19,36 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	private boolean started;
 	
 	Dispatcher(){
-		this.gui = new CPUFrame(this);
-		this.counter = new SynchronizedCounter();
-		this.IOqueue = new LinkedList<Process>();
+		gui = new CPUFrame(this);
+		counter = new SynchronizedCounter();
+		IOqueue = new LinkedList<Process>();
 		started = false;
 	}
 	
-	public void toggleStart() {
-		started = !started;
-	}
-	
 	public void startGui() {
-		this.gui.setVisible(true);
+		gui.setVisible(true);
 	}
 	
-	public void ticking(int FPS) {
-		new Thread(()->{
-			while (started) {
-				tickUp();
-				try {
-					Thread.sleep(1000 / FPS);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+	public void toggleStart(int FPS) {
+		started = !started;
+		if (started) {
+			addToProcessLog("STARTED", Color.BLACK);
+			new Thread(()->{
+				while (started) {
+					tickUp();
+					try {
+						Thread.sleep(1000 / FPS);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
-			}
-		}).start();
+			}).start();
+		} else {
+			addToProcessLog("STOPPED", Color.BLACK);
+		}
 	}
+
 	public void tickUp() {
 		counter.tickUp();
 		publishProcesses();
@@ -98,7 +101,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	 * @param color - the color of the message
 	 */
 	public void addToProcessLog(String message, Color color) {
-		this.gui.addToProcessLog(message, color);
+		gui.addToProcessLog(message, color);
 	}
 	
 	/**
@@ -124,9 +127,9 @@ public class Dispatcher { // tells the scheduler when it needs to work
 			for (int i = 1; i < IOqueue.size(); i++) {
 				queue.add(Integer.toString(IOqueue.get(i).getId()));
 			}
-			this.gui.getQueuePanel().setQueuedIOTasks(queue);
+			gui.getQueuePanel().setQueuedIOTasks(queue);
 			
-			this.gui.addToProcessLog("Process " + proc.getId() + ": Finished IO and moved back to ready queue at " + counter.getCount(), Color.BLUE);
+			gui.addToProcessLog("Process " + proc.getId() + ": Finished IO and moved back to ready queue at " + counter.getCount(), Color.BLUE);
 		}
 	}
 	
@@ -136,17 +139,17 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	 * @param proc - the process to add to the queue
 	 */
 	public void pushIO(Process proc) {
-		this.IOqueue.add(proc);
+		IOqueue.add(proc);
 		if (IOqueue.peek().equals(proc)) { // if process is now head of queue
 			proc.setIO();
-			this.gui.getQueuePanel().setCurrentIOTask(Integer.toString(proc.getId()));
+			gui.getQueuePanel().setCurrentIOTask(Integer.toString(proc.getId()));
 		}
 		ArrayList<String> queue = new ArrayList<String>();
 		for (int i = 1; i < IOqueue.size(); i++) {
 			queue.add(Integer.toString(IOqueue.get(i).getId()));
 		}
-		this.gui.getQueuePanel().setQueuedIOTasks(queue);
-		this.gui.addToProcessLog("Process " + proc.getId() + ": Entered IO Queue at " + counter.getCount(), Color.ORANGE);
+		gui.getQueuePanel().setQueuedIOTasks(queue);
+		gui.addToProcessLog("Process " + proc.getId() + ": Entered IO Queue at " + counter.getCount(), Color.ORANGE);
 	}
 
 	/**
@@ -162,7 +165,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 			return;
 		}
 		int index = 0;
-		this.allProcesses = new ArrayList<Process>();
+		allProcesses = new ArrayList<Process>();
 		while (fileinput.hasNext()) {
 			String line = fileinput.nextLine();
 			String[] params = line.split("\\s+"); // split line on whitespace
@@ -176,23 +179,23 @@ public class Dispatcher { // tells the scheduler when it needs to work
 				}
 			}
 			Process proc = new Process(index, params[0], Integer.parseInt(params[1]), Integer.parseInt(params[2]), cpu, io, counter, this);
-			this.allProcesses.add(proc);
+			allProcesses.add(proc);
 			index++;
 		}
 		fileinput.close();
 
-		this.publishProcesses();		
+		publishProcesses();		
 	}
 	
 	/**
 	 * Sets the GUI table with the list of all processes
 	 */
 	private void publishProcesses() {
-		Object[][] arr = new Object[this.allProcesses.size()][10];
-		for (int i = 0; i < this.allProcesses.size(); i++) {
-			arr[i] = this.allProcesses.get(i).getInformation();
+		Object[][] arr = new Object[allProcesses.size()][10];
+		for (int i = 0; i < allProcesses.size(); i++) {
+			arr[i] = allProcesses.get(i).getInformation();
 		}
-		this.gui.setTableData(arr);
+		gui.setTableData(arr);
 	}
 	
 }
