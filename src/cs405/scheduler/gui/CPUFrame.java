@@ -512,7 +512,6 @@ public class CPUFrame extends JFrame {
 		model.setDataVector(data, processTableColumnNames);
 		
 		processTable.revalidate();
-		System.out.println("Revalidated table, repainting!");
 		repaintComponents(GuiComponent.PROCESS_TABLE);
 	}
 	

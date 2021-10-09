@@ -51,7 +51,7 @@ public class Process {
 			}
 		});
 		
-		// set
+		// set data
 		this.startTime = null;
 		this.finishTime = null;
 		this.processState = State.NEW;
@@ -60,10 +60,6 @@ public class Process {
 		this.currentBurstList = Burst.CPU;
 		this.currentBurstIndex = 0;
 		this.isCurrentIO = false;
-		
-		// TESTING:
-		this.currentBurstList = Burst.IO;
-		this.processState = State.WAITING;
 	}
 	
 	/**

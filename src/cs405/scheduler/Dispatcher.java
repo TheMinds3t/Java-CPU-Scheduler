@@ -8,7 +8,6 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 import cs405.process.Process;
-import cs405.process.State;
 import cs405.scheduler.gui.CPUFrame;
 
 public class Dispatcher { // tells the scheduler when it needs to work
@@ -36,6 +35,11 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		this.gui.addToProcessLog(message, color);
 	}
 	
+	/**
+	 * Remove a process from the IO
+	 * Only ever removes the head of the queue
+	 * @param proc - the process to remove
+	 */
 	public void popIO(Process proc) {
 		if (proc.equals(IOqueue.peek())) { // double check we are attempting to remove the head
 			IOqueue.pop();
@@ -79,54 +83,44 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		this.gui.addToProcessLog("Process " + proc.getId() + ": Entered IO Queue at " + counter.getCount(), Color.ORANGE);
 	}
 
+	/**
+	 * Parses an input file and loads it into the system
+	 * @param file - the input file
+	 */
 	public void loadFromFile(File file) {
-		new Thread(()->{
-			Scanner fileinput;
-			try {
-				fileinput = new Scanner(file);
-			} catch (FileNotFoundException e) {
-				System.err.println("Error: File not found");
-				return;
-			}
-			int index = 0;
-			this.allProcesses = new ArrayList<Process>();
-			while (fileinput.hasNext()) {
-				String line = fileinput.nextLine();
-				String[] params = line.split("\\s+"); // split line on whitespace
-				ArrayList<Integer> cpu = new ArrayList<Integer>(); 
-				ArrayList<Integer> io = new ArrayList<Integer>(); 
-				for (int i = 3; i < params.length; i++) { // params 0-2 are not bursts
-					if (i % 2 == 1) { // every odd i is a cpu burst
-						cpu.add(Integer.parseInt(params[i]));
-					} else { // every even i is an io burst
-						io.add(Integer.parseInt(params[i]));
-					}
+		Scanner fileinput;
+		try {
+			fileinput = new Scanner(file);
+		} catch (FileNotFoundException e) {
+			System.err.println("Error: File not found");
+			return;
+		}
+		int index = 0;
+		this.allProcesses = new ArrayList<Process>();
+		while (fileinput.hasNext()) {
+			String line = fileinput.nextLine();
+			String[] params = line.split("\\s+"); // split line on whitespace
+			ArrayList<Integer> cpu = new ArrayList<Integer>(); 
+			ArrayList<Integer> io = new ArrayList<Integer>(); 
+			for (int i = 3; i < params.length; i++) { // params 0-2 are not bursts
+				if (i % 2 == 1) { // every odd i is a cpu burst
+					cpu.add(Integer.parseInt(params[i]));
+				} else { // every even i is an io burst
+					io.add(Integer.parseInt(params[i]));
 				}
-				Process proc = new Process(index, params[0], Integer.parseInt(params[1]), Integer.parseInt(params[2]), cpu, io, counter, this);
-				this.allProcesses.add(proc);
-				index++;
 			}
-			fileinput.close();
+			Process proc = new Process(index, params[0], Integer.parseInt(params[1]), Integer.parseInt(params[2]), cpu, io, counter, this);
+			this.allProcesses.add(proc);
+			index++;
+		}
+		fileinput.close();
 
-			this.publishProcesses();
-			
-			// TESTING: put process 0 in the IO queue and step until it's done
-			pushIO(allProcesses.get(0));
-			for (int i = 0; i < 24; i++) {
-				counter.tickUp();
-				// For some reason this does all the sleeping and then updates the gui
-				// instead of updating the gui between every sleep
-				// note: the data does appear to update correctly, it just isn't shown until the end
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				this.publishProcesses();
-			}			
-		}).start();
+		this.publishProcesses();		
 	}
 	
+	/**
+	 * Sets the GUI table with the list of all processes
+	 */
 	private void publishProcesses() {
 		Object[][] arr = new Object[this.allProcesses.size()][10];
 		for (int i = 0; i < this.allProcesses.size(); i++) {
