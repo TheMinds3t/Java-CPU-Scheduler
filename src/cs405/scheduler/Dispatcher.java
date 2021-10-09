@@ -115,10 +115,8 @@ public class Dispatcher { // tells the scheduler when it needs to work
 			Process next = IOqueue.peek();
 			if(next != null) { // tell the next process it's at the head
 				next.setIO();
-				System.out.println(next.toString());
 				gui.getQueuePanel().setCurrentIOTask(Integer.toString(next.getId()));
 			} else {
-				System.out.println("none");
 				gui.getQueuePanel().setCurrentIOTask(null);
 			}
 			
@@ -184,7 +182,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		}
 		fileinput.close();
 
-		publishProcesses();		
+		publishProcesses();	
 	}
 	
 	/**
