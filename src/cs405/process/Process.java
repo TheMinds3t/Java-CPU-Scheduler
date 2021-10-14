@@ -29,7 +29,7 @@ public class Process {
 	private int currentBurstIndex; // how many IO bursts have been completed
 	private int burstCompletion; // how much of the burst has been completed
 	private boolean isCurrentIO; // is the process currently the front of the IO queue
-
+	private int currentBurstArrival;
 	
 	public Process(int id, String name, int arrivalTime, int priority, List<Integer> CPUbursts, List<Integer> IObursts, SynchronizedCounter counter, Dispatcher dispatcher) {
 		// passed to constructor
@@ -82,7 +82,7 @@ public class Process {
 	 * @return the processes arrival time
 	 */
 	public int getArrivalTime() {
-		return arrivalTime;
+		return currentBurstArrival;
 	}
 	
 	/**
@@ -215,6 +215,8 @@ public class Process {
 			startTime = systemTime.getCount();
 		} else if (newState == State.WAITING) { // add to IO queue
 			dispatcher.pushIO(this);
+		} else if (newState == State.READY) { // add to CPU queue
+			currentBurstArrival = systemTime.getCount();
 		}
 	}
 	
