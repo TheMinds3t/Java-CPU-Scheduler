@@ -179,7 +179,7 @@ public class Process {
 	 */
 	public void preempt() {
 		setState(State.READY);
-		// TODO: print to process log a preempt message
+		dispatcher.addToProcessLog("Process " + pid + " preempted from CPU at time " + systemTime.getCount(), Color.BLUE);
 	}
 	
 	/**
@@ -188,7 +188,7 @@ public class Process {
 	 */
 	public void setCPU() {
 		setState(State.RUNNING);
-		// TODO: print to process log a message
+		dispatcher.addToProcessLog("Process " + pid + " started CPU at time " + systemTime.getCount(), new Color(0,100,0));
 	}
 	
 	/**
@@ -208,9 +208,9 @@ public class Process {
 		processState = newState;
 
 		if (newState == State.TERMINATED) {
-			// TODO: tell process log process has terminated, print turnaround + wait times
 			finishTime = systemTime.getCount();
 			turnaroundTime = finishTime - arrivalTime;
+			dispatcher.addToProcessLog("Process " + pid + " terminated at time " + systemTime.getCount() + ". Turnaround: " + turnaroundTime + ", CPU wait: " + CPUwait + ", IO wait: " + IOwait, Color.RED);
 		} else if (newState == State.RUNNING && currentBurstIndex == 0) { // first CPU
 			startTime = systemTime.getCount();
 		} else if (newState == State.WAITING) { // add to IO queue
