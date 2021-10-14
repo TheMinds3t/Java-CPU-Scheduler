@@ -715,7 +715,7 @@ public class CPUFrame extends JFrame {
 	 */
 	public void onStartStop()
 	{
-		dispatcher.toggleStart(getSelectedFrameRate());
+		dispatcher.toggleStart();
 	}
 
 	/**

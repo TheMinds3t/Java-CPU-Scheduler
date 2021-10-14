@@ -31,7 +31,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		gui.setVisible(true);
 	}
 
-	public void toggleStart(int FPS) {
+	public void toggleStart() {
 		started = !started;
 		if (started) {
 			addToProcessLog("STARTED", Color.BLACK);
@@ -39,7 +39,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 				while (started) {
 					tickUp();
 					try {
-						Thread.sleep(1000 / FPS);
+						Thread.sleep(1000 / gui.getSelectedFrameRate());
 					}
 					catch (InterruptedException e) {
 						// TODO Auto-generated catch block
