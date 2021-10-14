@@ -54,9 +54,12 @@ public class Dispatcher { // tells the scheduler when it needs to work
 
 	public void tickUp() {
 		counter.tickUp(); // increase system time
-		scheduleProcesses();
-		publishProcesses();
-		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait());
+		// check if any processes running
+		
+		Process p = scheduleProcesses();
+		
+		publishProcesses(); // refills process table
+		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait()); // sets system statistics
 	}
 
 	private double getThroughput() {
@@ -198,21 +201,17 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	/**
 	 * Gets scheduling method from GUI and has Scheduler arrange processes
 	 */
-	private void scheduleProcesses() {
+	private Process scheduleProcesses() {		
 		int algorithm = gui.getSelectedAlgorithm();
 		switch (algorithm) {
 		case 0:
-			scheduler.FCFS(allProcesses);
-			break;
+			return scheduler.FCFS(allProcesses);
 		case 1:
-			scheduler.PS(allProcesses);
-			break;
+			return scheduler.PS(allProcesses);
 		case 2:
-			scheduler.SJF(allProcesses);
-			break;
+			return scheduler.SJF(allProcesses);
 		case 3:
-			scheduler.RR(allProcesses, gui.getQValue());
-			break;
+			return scheduler.RR(allProcesses, gui.getQValue());
 		default:
 			throw new IllegalArgumentException("No matching method for input " + algorithm);
 		}
