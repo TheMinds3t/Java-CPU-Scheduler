@@ -13,7 +13,10 @@ import cs405.scheduler.gui.CPUFrame;
 
 public class Dispatcher { // tells the scheduler when it needs to work
 	private ArrayList<Process> allProcesses;
-	private LinkedList<Process> IOqueue;
+	private LinkedList<Process> ioQueue;
+	private Process currentProcess; // process currently running on the CPU
+	private LinkedList<Process> cpuQueue;
+
 	private CPUFrame gui;
 	private Scheduler scheduler;
 	private SynchronizedCounter counter;
@@ -22,7 +25,8 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	Dispatcher() {
 		gui = new CPUFrame(this);
 		counter = new SynchronizedCounter();
-		IOqueue = new LinkedList<Process>();
+		ioQueue = new LinkedList<Process>();
+		cpuQueue = new LinkedList<Process>();
 		scheduler = new Scheduler();
 		started = false;
 	}
@@ -55,11 +59,28 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	public void tickUp() {
 		counter.tickUp(); // increase system time
 		// check if any processes running
-		
-		Process p = scheduleProcesses();
-		
+		updateCPU();
 		publishProcesses(); // refills process table
 		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait()); // sets system statistics
+	}
+	
+	private void updateCPU() {
+		Process p = scheduleProcesses(); // sort processes
+		System.out.println("P: " + p);
+		if (p == null) {
+			gui.getQueuePanel().setCurrentCPUTask(null);
+			currentProcess = null;
+		} else if (currentProcess == null || currentProcess.getId() != p.getId()) {
+			gui.getQueuePanel().setCurrentCPUTask(Integer.toString(p.getId()));
+			currentProcess = p;
+			p.setCPU();
+		}
+		// update cpu queue
+		ArrayList<String> queue = new ArrayList<String>();
+		for (int i = 1; i < cpuQueue.size(); i++) {
+			queue.add(Integer.toString(cpuQueue.get(i).getId()));
+		}
+		gui.getQueuePanel().setQueuedCPUTasks(queue);
 	}
 
 	private double getThroughput() {
@@ -118,9 +139,9 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	 * @param proc - the process to remove
 	 */
 	public void popIO(Process proc) {
-		if (proc.equals(IOqueue.peek())) { // double check we are attempting to remove the head
-			IOqueue.pop();
-			Process next = IOqueue.peek();
+		if (proc.equals(ioQueue.peek())) { // double check we are attempting to remove the head
+			ioQueue.pop();
+			Process next = ioQueue.peek();
 			if (next != null) { // tell the next process it's at the head
 				next.setIO();
 				gui.getQueuePanel().setCurrentIOTask(Integer.toString(next.getId()));
@@ -130,8 +151,8 @@ public class Dispatcher { // tells the scheduler when it needs to work
 
 			// update queue in gui
 			ArrayList<String> queue = new ArrayList<String>();
-			for (int i = 1; i < IOqueue.size(); i++) {
-				queue.add(Integer.toString(IOqueue.get(i).getId()));
+			for (int i = 1; i < ioQueue.size(); i++) {
+				queue.add(Integer.toString(ioQueue.get(i).getId()));
 			}
 			gui.getQueuePanel().setQueuedIOTasks(queue);
 
@@ -147,14 +168,14 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	 * @param proc - the process to add to the queue
 	 */
 	public void pushIO(Process proc) {
-		IOqueue.add(proc);
-		if (IOqueue.peek().equals(proc)) { // if process is now head of queue
+		ioQueue.add(proc);
+		if (ioQueue.peek().equals(proc)) { // if process is now head of queue
 			proc.setIO();
 			gui.getQueuePanel().setCurrentIOTask(Integer.toString(proc.getId()));
 		}
 		ArrayList<String> queue = new ArrayList<String>();
-		for (int i = 1; i < IOqueue.size(); i++) {
-			queue.add(Integer.toString(IOqueue.get(i).getId()));
+		for (int i = 1; i < ioQueue.size(); i++) {
+			queue.add(Integer.toString(ioQueue.get(i).getId()));
 		}
 		gui.getQueuePanel().setQueuedIOTasks(queue);
 		gui.addToProcessLog("Process " + proc.getId() + ": Entered IO Queue at " + counter.getCount(), Color.ORANGE);
@@ -197,23 +218,41 @@ public class Dispatcher { // tells the scheduler when it needs to work
 
 		publishProcesses();
 	}
+	
+	private LinkedList<Process> makeCpuQueue() {
+		LinkedList<Process> queue = new LinkedList<Process>();
+		for (int i = 0; i < allProcesses.size(); i++) {
+			if (allProcesses.get(i).getState() == State.READY || allProcesses.get(i).getState() == State.RUNNING) {
+				queue.add(allProcesses.get(i));
+				System.out.println(allProcesses.get(i).toString());
+			}
+		}
+		return queue;
+	}
 
 	/**
 	 * Gets scheduling method from GUI and has Scheduler arrange processes
 	 */
 	private Process scheduleProcesses() {		
 		int algorithm = gui.getSelectedAlgorithm();
+		cpuQueue = makeCpuQueue();
+		System.out.println("CPUqueue: " + cpuQueue.size());
+		System.out.println("Algorithm: " + algorithm);
+
+		if (cpuQueue.size() == 0) {
+			return null;
+		}
 		switch (algorithm) {
-		case 0:
-			return scheduler.FCFS(allProcesses);
-		case 1:
-			return scheduler.PS(allProcesses);
-		case 2:
-			return scheduler.SJF(allProcesses);
-		case 3:
-			return scheduler.RR(allProcesses, gui.getQValue());
-		default:
-			throw new IllegalArgumentException("No matching method for input " + algorithm);
+			case 0:
+				return scheduler.FCFS(cpuQueue);
+			case 1:
+				return scheduler.PS(cpuQueue);
+			case 2:
+				return scheduler.SJF(cpuQueue);
+			case 3:
+				return scheduler.RR(cpuQueue, gui.getQValue());
+			default:
+				throw new IllegalArgumentException("No matching method for input " + algorithm);
 		}
 
 	}
