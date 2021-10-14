@@ -784,7 +784,7 @@ public class CPUFrame extends JFrame {
 				}
 				
 				String[] types = {".txt",".html"};
-				File finalFile = new File(f.getAbsolutePath()+types[fileType]);
+				File finalFile = new File(fileName == null ? f.getAbsolutePath()+types[fileType] : f.getAbsolutePath());
 				finalFile.createNewFile();
 				PrintWriter writer = new PrintWriter(finalFile);
 				
