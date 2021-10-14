@@ -1,4 +1,5 @@
 package cs405.scheduler.gui;
+// package cs405.scheduler.gui;
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -7,6 +8,8 @@ import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 import javax.swing.ButtonGroup;
@@ -17,6 +20,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
@@ -27,12 +31,15 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.PlainDocument;
+
+import com.sun.jdi.Field;
 
 import cs405.scheduler.Dispatcher;
 
@@ -385,10 +392,10 @@ public class CPUFrame extends JFrame {
 		gbc_logPanel.gridy = 3;
 		contentPane.add(logPanel, gbc_logPanel);
 		GridBagLayout gbl_logPanel = new GridBagLayout();
-		gbl_logPanel.columnWidths = new int[] {10, 40, 40, 40, 40, 10};
-		gbl_logPanel.rowHeights = new int[] {20, 220, 20};
+		gbl_logPanel.columnWidths = new int[] {10, 50, 40, 40, 50, 30};
+		gbl_logPanel.rowHeights = new int[] {20, 240, 20};
 		gbl_logPanel.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-		gbl_logPanel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_logPanel.rowWeights = new double[]{0.0, 0.0, 0.0};
 		logPanel.setLayout(gbl_logPanel);
 		
 		JLabel processLogLabel = new JLabel("Process Log");
@@ -404,7 +411,7 @@ public class CPUFrame extends JFrame {
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setViewportBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		GridBagConstraints gbc_scrollPane = new GridBagConstraints();
-		gbc_scrollPane.insets = new Insets(0, 0, 0, 5);
+		gbc_scrollPane.insets = new Insets(0, 0, 5, 5);
 		gbc_scrollPane.gridwidth = 4;
 		gbc_scrollPane.fill = GridBagConstraints.BOTH;
 		gbc_scrollPane.gridx = 1;
@@ -415,6 +422,28 @@ public class CPUFrame extends JFrame {
 		processLog.setContentType("text/html");
 		scrollPane.setViewportView(processLog);
 		
+		JButton exportButton = new JButton("Export Log");
+		GridBagConstraints gbc_exportButton = new GridBagConstraints();
+		gbc_exportButton.gridwidth = 4;
+		gbc_exportButton.insets = new Insets(0, 0, 0, 5);
+		gbc_exportButton.gridx = 1;
+		gbc_exportButton.gridy = 2;
+		logPanel.add(exportButton, gbc_exportButton);
+		exportButton.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent e) {}
+			@Override
+			public void mouseReleased(MouseEvent e) {}
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+			@Override
+			public void mouseExited(MouseEvent e) {}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				exportProcessLog();
+			}			
+		});
 	}
 	
 	public void setTableRowData(int row, Object[] data)
@@ -530,15 +559,20 @@ public class CPUFrame extends JFrame {
 	public void addToProcessLog(String msg, Color col)
 	{
 		processLogRaw.add(0,new ProcessLogEntry(msg,col == null ? Color.black : col));
+		processLog.setText(convertLogToHTML());
+		repaintComponents(GuiComponent.PROCESS_LOG);
+	}
+	
+	private String convertLogToHTML()
+	{
 		String formatted = "<html>";
 		
 		for(ProcessLogEntry ent : processLogRaw)
 		{
-			formatted += "<p style='margin:0;padding:0;color:rgb("+ent.color.getRed()+","+ent.color.getGreen()+","+ent.color.getBlue()+");'>"+ent.entry+"</p>";
+			formatted += "\n\t<p style='margin:0;padding:0;color:rgb("+ent.color.getRed()+","+ent.color.getGreen()+","+ent.color.getBlue()+");'>"+ent.entry+"</p>";
 		}
 		
-		processLog.setText(formatted+"</html>");
-		repaintComponents(GuiComponent.PROCESS_LOG);
+		return formatted+"\n</html>";
 	}
 	
 	/**
@@ -691,6 +725,123 @@ public class CPUFrame extends JFrame {
 	{
 		dispatcher.loadFromFile(file);
 		addToProcessLog("Loaded file: " + file.getAbsolutePath());
+	} 
+	
+	/**
+	 * Saves the process log to a user-chosen file, either text or html (user chosen).
+	 * 
+	 * @return true if the file was successfully created, false if not
+	 */
+	public boolean exportProcessLog()
+	{
+		return exportProcessLog(null);
+	}
+
+	/**
+	 * Saves the process log to the given file, either text or html.
+	 * 
+	 * @param fileName set this to null to let the user choose with {@link JFileChooser}, or set it to the name of the output file.
+	 * 
+	 * @return true if the file was successfully created, false if not
+	 */
+	public boolean exportProcessLog(String fileName)
+	{
+		return exportProcessLog(fileName, -1);
+	}
+
+	/**
+	 * Saves the process log to a file, either text or html.
+	 * 
+	 * @param fileName set this to null to let the user choose with {@link JFileChooser}, or set it to the name of the output file.
+	 * @param fileType -1 for user's choice, 0 for .txt, 1 for .html
+	 * 
+	 * @return true if the file was successfully created, false if not
+	 */
+	public boolean exportProcessLog(String fileName, int fileType)
+	{
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		
+		int result = JFileChooser.APPROVE_OPTION;
+
+		if(fileName == null) //no determined fileName means choose a file
+		{
+			 result = chooser.showSaveDialog(this);			
+		}
+
+		if(result == JFileChooser.APPROVE_OPTION)
+		{
+			//remove extension from user-defined file to make overwriting easier, otherwise use determined fileName
+			File f = fileName == null ? new File(removeExtension(chooser.getSelectedFile().getAbsolutePath())) : new File(fileName);
+			try {
+				if(fileType == -1)
+				{
+					//choose output filetype
+					fileType = JOptionPane.showOptionDialog(this, "Output to a text file or HTML file?", "Select Output File Type", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {f.getName()+".txt", f.getName()+".html"}, null);
+				}
+				
+				if(fileType == JOptionPane.CLOSED_OPTION)
+				{
+					fileType = 0;
+				}
+				
+				String[] types = {".txt",".html"};
+
+				//compile the file from the path (removing extensions if user-defined) and the specified file format, unless fileName is hardcoded.
+				File finalFile = new File(fileName == null ? f.getAbsolutePath()+types[fileType] : f.getAbsolutePath());
+				finalFile.createNewFile();
+				PrintWriter writer = new PrintWriter(finalFile);
+				
+				if(fileType == 0)
+				{
+					for(ProcessLogEntry logLine : processLogRaw)
+					{
+						writer.println(logLine.entry);
+					}					
+				}
+				else
+				{
+					writer.println(convertLogToHTML());
+				}
+				
+				writer.flush();
+				writer.close();
+				return true;
+			} 
+			catch (IOException e) 
+			{
+				JOptionPane.showMessageDialog(this, "File not found?");
+				return false;
+			}
+			
+		}
+		else //operation was cancelled
+		{
+			return false;
+		}
+	}
+	
+	private String removeExtension(String s)
+	{
+	    String separator = System.getProperty("file.separator");
+	    String filename;
+	    
+	    // Remove the path upto the filename.
+	    int lastSeparatorIndex = s.lastIndexOf(separator);
+	    if (lastSeparatorIndex == -1) {
+	        filename = s;
+	    } else {
+	        filename = s.substring(lastSeparatorIndex + 1);
+	    }
+
+	    // Remove the extension.
+	    int extensionIndex = filename.lastIndexOf(".");
+	    if (extensionIndex == -1)
+	        return filename;
+
+	    return filename.substring(0, extensionIndex);	
+
+	    //Source: https://stackoverflow.com/questions/941272/how-do-i-trim-a-file-extension-from-a-string-in-java
 	}
 	
 	/**
