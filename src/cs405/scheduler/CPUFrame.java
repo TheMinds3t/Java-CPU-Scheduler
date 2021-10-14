@@ -763,13 +763,14 @@ public class CPUFrame extends JFrame {
 		
 		int result = JFileChooser.APPROVE_OPTION;
 
-		if(fileName == null)
+		if(fileName == null) //no determined fileName means choose a file
 		{
 			 result = chooser.showSaveDialog(this);			
 		}
 
 		if(result == JFileChooser.APPROVE_OPTION)
 		{
+			//remove extension from user-defined file to make overwriting easier, otherwise use determined fileName
 			File f = fileName == null ? new File(removeExtension(chooser.getSelectedFile().getAbsolutePath())) : new File(fileName);
 			try {
 				if(fileType == -1)
@@ -784,6 +785,8 @@ public class CPUFrame extends JFrame {
 				}
 				
 				String[] types = {".txt",".html"};
+
+				//compile the file from the path (removing extensions if user-defined) and the specified file format, unless fileName is hardcoded.
 				File finalFile = new File(fileName == null ? f.getAbsolutePath()+types[fileType] : f.getAbsolutePath());
 				finalFile.createNewFile();
 				PrintWriter writer = new PrintWriter(finalFile);
