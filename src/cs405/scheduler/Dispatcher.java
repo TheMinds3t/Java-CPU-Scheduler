@@ -199,9 +199,6 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	 * Gets scheduling method from GUI and has Scheduler arrange processes
 	 */
 	private void scheduleProcesses() {
-		for (Process process : allProcesses) {
-			System.out.println(process.getId());
-		}
 		int algorithm = gui.getSelectedAlgorithm();
 		switch (algorithm) {
 		case 0:
@@ -218,9 +215,6 @@ public class Dispatcher { // tells the scheduler when it needs to work
 			break;
 		default:
 			throw new IllegalArgumentException("No matching method for input " + algorithm);
-		}
-		for (Process process : allProcesses) {
-			System.out.println(process.getId());
 		}
 
 	}
