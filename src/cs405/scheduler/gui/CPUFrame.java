@@ -92,8 +92,8 @@ public class CPUFrame extends JFrame {
 		fcfsAlg.setSelected(true);
 		menuBar.add(fcfsAlg);
 		
-		JRadioButtonMenuItem nonpAlg = new JRadioButtonMenuItem("Non-Preemptive");
-		menuBar.add(nonpAlg);
+		JRadioButtonMenuItem priAlg = new JRadioButtonMenuItem("Priority");
+		menuBar.add(priAlg);
 		
 		JRadioButtonMenuItem sjfAlg = new JRadioButtonMenuItem("SJF");
 		menuBar.add(sjfAlg);
@@ -103,12 +103,12 @@ public class CPUFrame extends JFrame {
 		
 		
 		algButs[0] = fcfsAlg;
-		algButs[1] = nonpAlg;
+		algButs[1] = priAlg;
 		algButs[2] = sjfAlg;
 		algButs[3] = rrAlg;
 
 		algGroup.add(sjfAlg);
-		algGroup.add(nonpAlg);
+		algGroup.add(priAlg);
 		algGroup.add(fcfsAlg);
 		algGroup.add(rrAlg);
 		
@@ -601,7 +601,7 @@ public class CPUFrame extends JFrame {
 	/**
 	 * Returns the index of the selected algorithm. Index corresponds with the following algorithm:
 	 * 		0 - FCFS,
-	 * 		1 - Non-Preemptive,
+	 * 		1 - Priority,
 	 * 		2 - SJF,
 	 * 		3 - RR
 	 * @return the index of the selected algorithm, or in the event none are selected -1.

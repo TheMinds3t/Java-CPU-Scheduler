@@ -15,30 +15,33 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	private ArrayList<Process> allProcesses;
 	private LinkedList<Process> IOqueue;
 	private CPUFrame gui;
+	private Scheduler scheduler;
 	private SynchronizedCounter counter;
 	private boolean started;
-	
-	Dispatcher(){
+
+	Dispatcher() {
 		gui = new CPUFrame(this);
 		counter = new SynchronizedCounter();
 		IOqueue = new LinkedList<Process>();
+		scheduler = new Scheduler();
 		started = false;
 	}
-	
+
 	public void startGui() {
 		gui.setVisible(true);
 	}
-	
+
 	public void toggleStart(int FPS) {
 		started = !started;
 		if (started) {
 			addToProcessLog("STARTED", Color.BLACK);
-			new Thread(()->{
+			new Thread(() -> {
 				while (started) {
 					tickUp();
 					try {
 						Thread.sleep(1000 / FPS);
-					} catch (InterruptedException e) {
+					}
+					catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
@@ -50,12 +53,13 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	}
 
 	public void tickUp() {
-		counter.tickUp();
+		counter.tickUp(); // increase system time
+		scheduleProcesses();
 		publishProcesses();
-		gui.setSystemData(counter.getCount(), getTroughput(), getTurnaround(), getWait());
+		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait());
 	}
-	
-	private double getTroughput() {
+
+	private double getThroughput() {
 		if (counter.getCount() == 0) {
 			return 0;
 		} else {
@@ -65,10 +69,10 @@ public class Dispatcher { // tells the scheduler when it needs to work
 					finished++;
 				}
 			}
-			return finished / (double)(counter.getCount());
+			return finished / (double) (counter.getCount());
 		}
 	}
-	
+
 	private double getTurnaround() {
 		int count = 0;
 		int totalTime = 0;
@@ -81,9 +85,9 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		if (count == 0) { // if no processes are finished, display 0
 			return 0;
 		}
-		return totalTime / (double)(count); // return average turnaround time
+		return totalTime / (double) (count); // return average turnaround time
 	}
-	
+
 	private double getWait() {
 		int totalTime = 0;
 		for (int i = 0; i < allProcesses.size(); i++) {
@@ -92,48 +96,51 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		if (allProcesses.size() == 0) { // if no processes are loaded, display 0
 			return 0;
 		}
-		return totalTime / (double)(allProcesses.size()); // return average wait time
+		return totalTime / (double) (allProcesses.size()); // return average wait time
 	}
-	
+
 	/**
 	 * Helper function to allow processes to add to process log
+	 * 
 	 * @param message - the message to add to the log
-	 * @param color - the color of the message
+	 * @param color   - the color of the message
 	 */
 	public void addToProcessLog(String message, Color color) {
 		gui.addToProcessLog(message, color);
 	}
-	
+
 	/**
-	 * Remove a process from the IO
-	 * Only ever removes the head of the queue
+	 * Remove a process from the IO Only ever removes the head of the queue
+	 * 
 	 * @param proc - the process to remove
 	 */
 	public void popIO(Process proc) {
 		if (proc.equals(IOqueue.peek())) { // double check we are attempting to remove the head
 			IOqueue.pop();
 			Process next = IOqueue.peek();
-			if(next != null) { // tell the next process it's at the head
+			if (next != null) { // tell the next process it's at the head
 				next.setIO();
 				gui.getQueuePanel().setCurrentIOTask(Integer.toString(next.getId()));
 			} else {
 				gui.getQueuePanel().setCurrentIOTask(null);
 			}
-			
+
 			// update queue in gui
 			ArrayList<String> queue = new ArrayList<String>();
 			for (int i = 1; i < IOqueue.size(); i++) {
 				queue.add(Integer.toString(IOqueue.get(i).getId()));
 			}
 			gui.getQueuePanel().setQueuedIOTasks(queue);
-			
-			gui.addToProcessLog("Process " + proc.getId() + ": Finished IO and moved back to ready queue at " + counter.getCount(), Color.BLUE);
+
+			gui.addToProcessLog(
+					"Process " + proc.getId() + ": Finished IO and moved back to ready queue at " + counter.getCount(),
+					Color.BLUE);
 		}
 	}
-	
+
 	/**
-	 * Add a process to the IO Queue
-	 * The process should be the object calling this
+	 * Add a process to the IO Queue The process should be the object calling this
+	 * 
 	 * @param proc - the process to add to the queue
 	 */
 	public void pushIO(Process proc) {
@@ -152,13 +159,15 @@ public class Dispatcher { // tells the scheduler when it needs to work
 
 	/**
 	 * Parses an input file and loads it into the system
+	 * 
 	 * @param file - the input file
 	 */
 	public void loadFromFile(File file) {
 		Scanner fileinput;
 		try {
 			fileinput = new Scanner(file);
-		} catch (FileNotFoundException e) {
+		}
+		catch (FileNotFoundException e) {
 			System.err.println("Error: File not found");
 			return;
 		}
@@ -167,8 +176,8 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		while (fileinput.hasNext()) {
 			String line = fileinput.nextLine();
 			String[] params = line.split("\\s+"); // split line on whitespace
-			ArrayList<Integer> cpu = new ArrayList<Integer>(); 
-			ArrayList<Integer> io = new ArrayList<Integer>(); 
+			ArrayList<Integer> cpu = new ArrayList<Integer>();
+			ArrayList<Integer> io = new ArrayList<Integer>();
 			for (int i = 3; i < params.length; i++) { // params 0-2 are not bursts
 				if (i % 2 == 1) { // every odd i is a cpu burst
 					cpu.add(Integer.parseInt(params[i]));
@@ -176,15 +185,46 @@ public class Dispatcher { // tells the scheduler when it needs to work
 					io.add(Integer.parseInt(params[i]));
 				}
 			}
-			Process proc = new Process(index, params[0], Integer.parseInt(params[1]), Integer.parseInt(params[2]), cpu, io, counter, this);
+			Process proc = new Process(index, params[0], Integer.parseInt(params[1]), Integer.parseInt(params[2]), cpu,
+					io, counter, this);
 			allProcesses.add(proc);
 			index++;
 		}
 		fileinput.close();
 
-		publishProcesses();	
+		publishProcesses();
 	}
-	
+
+	/**
+	 * Gets scheduling method from GUI and has Scheduler arrange processes
+	 */
+	private void scheduleProcesses() {
+		for (Process process : allProcesses) {
+			System.out.println(process.getId());
+		}
+		int algorithm = gui.getSelectedAlgorithm();
+		switch (algorithm) {
+		case 0:
+			scheduler.FCFS(allProcesses);
+			break;
+		case 1:
+			scheduler.PS(allProcesses);
+			break;
+		case 2:
+			scheduler.SJF(allProcesses);
+			break;
+		case 3:
+			scheduler.RR(allProcesses, gui.getQValue());
+			break;
+		default:
+			throw new IllegalArgumentException("No matching method for input " + algorithm);
+		}
+		for (Process process : allProcesses) {
+			System.out.println(process.getId());
+		}
+
+	}
+
 	/**
 	 * Sets the GUI table with the list of all processes
 	 */
@@ -195,5 +235,5 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		}
 		gui.setTableData(arr);
 	}
-	
+
 }
