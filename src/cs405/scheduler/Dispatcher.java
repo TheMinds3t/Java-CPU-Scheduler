@@ -52,10 +52,10 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	public void tickUp() {
 		counter.tickUp();
 		publishProcesses();
-		gui.setSystemData(counter.getCount(), getTroughput(), getTurnaround(), getWait());
+		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait());
 	}
 	
-	private double getTroughput() {
+	private double getThroughput() {
 		if (counter.getCount() == 0) {
 			return 0;
 		} else {
