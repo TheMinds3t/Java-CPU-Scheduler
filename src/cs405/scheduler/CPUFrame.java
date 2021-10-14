@@ -568,10 +568,10 @@ public class CPUFrame extends JFrame {
 		
 		for(ProcessLogEntry ent : processLogRaw)
 		{
-			formatted += "<p style='margin:0;padding:0;color:rgb("+ent.color.getRed()+","+ent.color.getGreen()+","+ent.color.getBlue()+");'>"+ent.entry+"</p>";
+			formatted += "\n\t<p style='margin:0;padding:0;color:rgb("+ent.color.getRed()+","+ent.color.getGreen()+","+ent.color.getBlue()+");'>"+ent.entry+"</p>";
 		}
 		
-		return formatted+"</html>";
+		return formatted+"\n</html>";
 	}
 	
 	/**
