@@ -30,9 +30,10 @@ public class Scheduler {
 	public Process RR(List<Process> processes, int quantum) {
 		// Going through each process in turn
 		// Order of processes is FCFS
-		
+		System.out.println(processes.size());
+		System.out.println(roundRobinIndex);
 		// Quantum checking handled by dispatcher?
-		if (roundRobinIndex > processes.size() - 1) { // no longer a valid index
+		if (roundRobinIndex >= processes.size() - 1) { // no longer a valid index
 			roundRobinIndex = -1;
 		}
 		
