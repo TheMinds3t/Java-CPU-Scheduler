@@ -22,10 +22,8 @@ public class Scheduler {
 	}
 
 	public Process SJF(List<Process> processes) {
-		System.out.println(processes.hashCode());
 		// Shortest job first - ordered by smallest next CPU burst
 		processes.sort(Comparator.comparing(Process::getNextCPUBurst));
-		System.out.println(processes.hashCode());
 		return processes.get(0);
 	}
 
