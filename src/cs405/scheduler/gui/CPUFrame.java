@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
@@ -27,7 +26,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
-import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -38,6 +36,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.PlainDocument;
+
 import cs405.scheduler.Dispatcher;
 
 /**
@@ -234,7 +233,7 @@ public class CPUFrame extends JFrame {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				onStartStop();
+				dispatcher.toggleStart(getSelectedFrameRate());
 			}			
 		});
 		JLabel fpsLabel = new JLabel("FPS: ");
@@ -274,7 +273,7 @@ public class CPUFrame extends JFrame {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				onStepOnce();
+				dispatcher.tickUp();
 			}			
 		});
 		panel.add(btnStepOnce, gbc_btnStepOnce);
@@ -314,7 +313,8 @@ public class CPUFrame extends JFrame {
 				if(result == JFileChooser.APPROVE_OPTION)
 				{
 					File f = chooser.getSelectedFile();
-					onLoadFile(f);
+					dispatcher.loadFromFile(f);
+					addToProcessLog("Loaded file: " + f.getAbsolutePath());
 				}
 			}			
 		});
@@ -699,36 +699,6 @@ public class CPUFrame extends JFrame {
 		}
 	}
 	
-	//									//
-	// This part is related to back-end //
-	//									//
-	
-	//TODO
-	/**
-	 * A placeholder function called when the Step Once button is pressed. To be filled in by backend.
-	 */
-	public void onStepOnce()
-	{
-		dispatcher.tickUp();
-	}
-
-	//TODO
-	/**
-	 * TODO: A placeholder function called when the Start/Stop button is pressed. To be filled in by backend.
-	 */
-	public void onStartStop()
-	{
-		dispatcher.toggleStart(getSelectedFrameRate());
-	}
-
-	/**
-	 * TODO: A placeholder function called when the Load File button is pressed. To be filled in by backend.
-	 */
-	public void onLoadFile(File file)
-	{
-		dispatcher.loadFromFile(file);
-		addToProcessLog("Loaded file: " + file.getAbsolutePath());
-	} 
 	
 	/**
 	 * Saves the process log to a user-chosen file, either text or html (user chosen).
