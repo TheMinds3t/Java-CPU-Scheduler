@@ -66,7 +66,6 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	
 	private void updateCPU() {
 		Process p = scheduleProcesses(); // sort processes
-		System.out.println("P: " + p);
 		if (p == null) {
 			gui.getQueuePanel().setCurrentCPUTask(null);
 			currentProcess = null;
@@ -224,7 +223,6 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		for (int i = 0; i < allProcesses.size(); i++) {
 			if (allProcesses.get(i).getState() == State.READY || allProcesses.get(i).getState() == State.RUNNING) {
 				queue.add(allProcesses.get(i));
-				System.out.println(allProcesses.get(i).toString());
 			}
 		}
 		return queue;
@@ -236,8 +234,6 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	private Process scheduleProcesses() {		
 		int algorithm = gui.getSelectedAlgorithm();
 		cpuQueue = makeCpuQueue();
-		System.out.println("CPUqueue: " + cpuQueue.size());
-		System.out.println("Algorithm: " + algorithm);
 
 		if (cpuQueue.size() == 0) {
 			return null;

@@ -16,7 +16,6 @@ public class Scheduler {
 	public Scheduler() {}
 
 	public Process FCFS(List<Process> processes) {
-		System.out.println("Scheduler: " + processes);
 		// First come, first served	- ordered by arrival time
 		processes.sort(Comparator.comparing(Process::getArrivalTime));
 		return processes.get(0);

@@ -26,8 +26,10 @@ public class Process {
 	private int CPUwait; // the total time waiting in the CPU queue (time READY)
 	private int IOwait; // the total time waiting in the IO queue (time WAITING)
 	private int turnaroundTime; // the total execution time of a process (finishTime - arrivalTime)
-	private int currentBurstIndex; // how many IO bursts have been completed
-	private int burstCompletion; // how much of the burst has been completed
+	private int currentIoIndex; // how many IO bursts have been completed
+	private int currentCpuIndex; // how many CPU bursts have been completed
+	private int burstCpuCompletion; // how much of the burst has been completed
+	private int burstIoCompletion; // how much of the burst has been completed
 	private boolean isCurrentIO; // is the process currently the front of the IO queue
 	private int currentBurstArrival;
 	
@@ -56,9 +58,12 @@ public class Process {
 		processState = State.NEW;
 		CPUwait = 0;
 		IOwait = 0;
-		currentBurstIndex = 0;
+		currentIoIndex = 0;
+		currentCpuIndex = 0;
 		isCurrentIO = false;
 		turnaroundTime = 0;
+		burstCpuCompletion = 0;
+		burstIoCompletion = 0;
 	}
 	
 	/**
@@ -107,11 +112,11 @@ public class Process {
 	 */
 	public int getNextCPUBurst() {
 		if (processState == State.RUNNING) { // currently working on CPU
-			return CPUbursts.get(currentBurstIndex) - burstCompletion;
+			return CPUbursts.get(currentIoIndex) - burstCpuCompletion;
 		} else if (processState == State.WAITING) { // after working on CPU
-			return CPUbursts.get(currentBurstIndex + 1);
+			return CPUbursts.get(currentIoIndex + 1);
 		} else { // before working on CPU
-			return CPUbursts.get(currentBurstIndex);
+			return CPUbursts.get(currentIoIndex);
 		}
 	}
 	
@@ -126,8 +131,8 @@ public class Process {
 		arr[0] = pid;
 		arr[1] = arrivalTime;
 		arr[2] = priority;
-		arr[3] = getBurstInfo(CPUbursts);
-		arr[4] = getBurstInfo(IObursts);
+		arr[3] = getBurstInfo(CPUbursts, Burst.CPU);
+		arr[4] = getBurstInfo(IObursts, Burst.IO);
 		arr[5] = startTime;
 		arr[6] = finishTime;
 		arr[7] = CPUwait;
@@ -137,13 +142,15 @@ public class Process {
 		return arr;
 	}
 	
-	private String getBurstInfo(List<Integer> list) {
+	private String getBurstInfo(List<Integer> list, Burst burst) {
+		int index = (burst == Burst.CPU ? currentCpuIndex : currentIoIndex);
+		int completion = (burst == Burst.CPU ? burstCpuCompletion : burstIoCompletion);
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < list.size(); i++) {
-			if (currentBurstIndex > i) { // already did burst
+			if (index > i) { // already did burst
 				sb.append("0/" + list.get(i));
-			} else if (currentBurstIndex == i) {
-				sb.append((list.get(i) - burstCompletion) + "/" + list.get(i));
+			} else if (index == i) {
+				sb.append((list.get(i) - completion) + "/" + list.get(i));
 			} else {
 				sb.append(list.get(i) + "/" + list.get(i));
 			}
@@ -211,7 +218,7 @@ public class Process {
 			finishTime = systemTime.getCount();
 			turnaroundTime = finishTime - arrivalTime;
 			dispatcher.addToProcessLog("Process " + pid + " terminated at time " + systemTime.getCount() + ". Turnaround: " + turnaroundTime + ", CPU wait: " + CPUwait + ", IO wait: " + IOwait, Color.RED);
-		} else if (newState == State.RUNNING && currentBurstIndex == 0) { // first CPU
+		} else if (newState == State.RUNNING && currentIoIndex == 0) { // first CPU
 			startTime = systemTime.getCount();
 		} else if (newState == State.WAITING) { // add to IO queue
 			dispatcher.pushIO(this);
@@ -228,11 +235,11 @@ public class Process {
 		IOwait++;
 		if (isCurrentIO) { 
 			// Head of IO queue, so got response from IO
-			burstCompletion++;
-			if (burstCompletion == IObursts.get(currentBurstIndex)) {
+			burstIoCompletion++;
+			if (burstIoCompletion == IObursts.get(currentIoIndex)) {
 				// finished IO, go back to CPU
-				burstCompletion = 0;
-				currentBurstIndex++; 
+				burstIoCompletion = 0;
+				currentIoIndex++; 
 				dispatcher.popIO(this);
 				setState(State.READY);
 			}
@@ -252,12 +259,13 @@ public class Process {
 	 * RUNNING refers to being actively on the CPU
 	 */
 	private void running() {
-		burstCompletion++;
-		if (burstCompletion == CPUbursts.get(currentBurstIndex)) {
+		burstCpuCompletion++;
+		if (burstCpuCompletion == CPUbursts.get(currentIoIndex)) {
 			// finished CPU burst, move onto next IO burst or terminate
-			if (currentBurstIndex < IObursts.size()) {
+			currentCpuIndex++;
+			if (currentIoIndex < IObursts.size()) {
 				// there is an IO burst, switch to IO
-				burstCompletion = 0;
+				burstCpuCompletion = 0;
 				setState(State.WAITING);
 			} else {
 				// there is no more IO, last CPU burst just finished
