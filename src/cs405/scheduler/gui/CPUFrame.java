@@ -4,9 +4,12 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 import javax.swing.ButtonGroup;
@@ -17,14 +20,17 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AttributeSet;
@@ -33,7 +39,7 @@ import javax.swing.text.Document;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.PlainDocument;
 
-import cs405.scheduler.Scheduler;
+import cs405.scheduler.Dispatcher;
 
 /**
  * The main JFrame for the application. Sports many helper methods for updating the elements present in the GUI.
@@ -44,6 +50,7 @@ public class CPUFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTable processTable;
+	private String[] processTableColumnNames = new String[]{"ID", "Arrival", "Priority", "CPU Bursts", "I/O Bursts", "Start Time", "End Time", "Wait Time", "Wait I/O Time", "Status"};
 	private JScrollPane processPanel;
 	private JTextPane systemDataLabel;
 	private JTextField qField;
@@ -52,21 +59,16 @@ public class CPUFrame extends JFrame {
 	private JRadioButtonMenuItem[] algButs = new JRadioButtonMenuItem[4];
 	private JComboBox<Integer> fpsCombo;
 	private QueuePanel queuePanel = new QueuePanel(this);
+	private Dispatcher dispatcher;
 	
 	private ArrayList<ProcessLogEntry> processLogRaw = new ArrayList<ProcessLogEntry>();
 	
-	private Scheduler scheduler;
 
 	/**
 	 * Create the frame.
 	 */
-	public CPUFrame(Scheduler scheduler) {
-		
-		if(scheduler != null)
-		{
-			this.scheduler = scheduler;
-		}
-		
+	public CPUFrame(Dispatcher dispatch) {
+		dispatcher = dispatch;
 		setBackground(Color.GRAY);
 		setAlwaysOnTop(true);
 		setResizable(false);
@@ -307,6 +309,7 @@ public class CPUFrame extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				JFileChooser chooser = new JFileChooser();
+				chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
 				int result = chooser.showOpenDialog(CPUFrame.this);
 				
 				if(result == JFileChooser.APPROVE_OPTION)
@@ -324,7 +327,7 @@ public class CPUFrame extends JFrame {
 		gbc_systemInfoLabel.gridx = 0;
 		gbc_systemInfoLabel.gridy = 5;
 		panel.add(systemInfoLabel, gbc_systemInfoLabel);
-		setSystemData(1,1,1,1);
+		setSystemData(0,0,0,0);
 		
 		JPanel queuesPanel = new JPanel();
 		queuesPanel.setBackground(Color.GRAY);
@@ -375,7 +378,7 @@ public class CPUFrame extends JFrame {
 		processTable.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		processPanel.setViewportView(processTable.getTableHeader());
 		processPanel.setViewportView(processTable);
-		setTableData(null);
+		initializeTable(null);
 		processTable.setFillsViewportHeight(true);
 		processTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		
@@ -387,10 +390,10 @@ public class CPUFrame extends JFrame {
 		gbc_logPanel.gridy = 3;
 		contentPane.add(logPanel, gbc_logPanel);
 		GridBagLayout gbl_logPanel = new GridBagLayout();
-		gbl_logPanel.columnWidths = new int[] {10, 40, 40, 40, 40, 10};
-		gbl_logPanel.rowHeights = new int[] {20, 220, 20};
+		gbl_logPanel.columnWidths = new int[] {10, 50, 40, 40, 50, 30};
+		gbl_logPanel.rowHeights = new int[] {20, 240, 20};
 		gbl_logPanel.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-		gbl_logPanel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_logPanel.rowWeights = new double[]{0.0, 0.0, 0.0};
 		logPanel.setLayout(gbl_logPanel);
 		
 		JLabel processLogLabel = new JLabel("Process Log");
@@ -406,7 +409,7 @@ public class CPUFrame extends JFrame {
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setViewportBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		GridBagConstraints gbc_scrollPane = new GridBagConstraints();
-		gbc_scrollPane.insets = new Insets(0, 0, 0, 5);
+		gbc_scrollPane.insets = new Insets(0, 0, 5, 5);
 		gbc_scrollPane.gridwidth = 4;
 		gbc_scrollPane.fill = GridBagConstraints.BOTH;
 		gbc_scrollPane.gridx = 1;
@@ -417,8 +420,28 @@ public class CPUFrame extends JFrame {
 		processLog.setContentType("text/html");
 		scrollPane.setViewportView(processLog);
 		
-		addToProcessLog("testing this dang text pane", Color.red);
-		addToProcessLog("Hopefully it works!");
+		JButton exportButton = new JButton("Export Log");
+		GridBagConstraints gbc_exportButton = new GridBagConstraints();
+		gbc_exportButton.gridwidth = 4;
+		gbc_exportButton.insets = new Insets(0, 0, 0, 5);
+		gbc_exportButton.gridx = 1;
+		gbc_exportButton.gridy = 2;
+		logPanel.add(exportButton, gbc_exportButton);
+		exportButton.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent e) {}
+			@Override
+			public void mouseReleased(MouseEvent e) {}
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+			@Override
+			public void mouseExited(MouseEvent e) {}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				exportProcessLog();
+			}			
+		});
 	}
 	
 	public void setTableRowData(int row, Object[] data)
@@ -428,38 +451,29 @@ public class CPUFrame extends JFrame {
 			processTable.getModel().setValueAt(data[i], row, i);			
 		}
 
+		processTable.revalidate();
 		repaintComponents(GuiComponent.PROCESS_TABLE);
 	}
 	
 	public void setTableCellData(int row, int col, Object data)
 	{
 		processTable.getModel().setValueAt(data, row, col);
+		processTable.revalidate();
 		repaintComponents(GuiComponent.PROCESS_TABLE);
 	}
 	
-	/**
-	 * Sets the data present in the processTable listing the process details.
-	 * 
-	 * Format of data:
-	 * 		Array of rows, each second dimension is the following:
-	 * 			{ID (int), Arrival (int), Priority (int), CPU Bursts (String), I/O Bursts (String), Start Time (int), End Time (int), Wait Time (int), Wait I/O Time (int), Status (String)}
-	 * Values can be null to specify an empty cell.
-	 * @param data the 2d array to specify the rows to add
-	 */
-	@SuppressWarnings("rawtypes")
-	public void setTableData(Object[][] data)
+	private void initializeTable(Object[][] data)
 	{
 		processTable.setModel(new DefaultTableModel(
 				data == null ? new Object[][] { //Data
 					{null, null, null, null, null, null, null, null, null, null},
 				} : data,
-				new String[] { //Headers
-					"ID", "Arrival", "Priority", "CPU Bursts", "I/O Bursts", "Start Time", "End Time", "Wait Time", "Wait I/O Time", "Status"
-				}) 
+				processTableColumnNames) 
 			{
 				private static final long serialVersionUID = 1L;
 				
 				//Constrains input to certain data types
+				@SuppressWarnings("rawtypes")
 				Class[] columnTypes = new Class[] {
 					Integer.class, Integer.class, Integer.class, String.class, String.class, Integer.class, Integer.class, Integer.class, Integer.class, String.class
 				};
@@ -506,6 +520,23 @@ public class CPUFrame extends JFrame {
 		
 		processPanel.setHorizontalScrollBar(processPanel.createHorizontalScrollBar());
 		processPanel.setVerticalScrollBar(processPanel.createVerticalScrollBar());
+	}
+	
+	/**
+	 * Sets the data present in the processTable listing the process details.
+	 * 
+	 * Format of data:
+	 * 		Array of rows, each second dimension is the following:
+	 * 			{ID (int), Arrival (int), Priority (int), CPU Bursts (String), I/O Bursts (String), Start Time (int), End Time (int), Wait Time (int), Wait I/O Time (int), Status (String)}
+	 * Values can be null to specify an empty cell.
+	 * @param data the 2d array to specify the rows to add
+	 */
+	public void setTableData(Object[][] data)
+	{
+		DefaultTableModel model = (DefaultTableModel) processTable.getModel();
+		model.setDataVector(data, processTableColumnNames);
+		
+		processTable.revalidate();
 		repaintComponents(GuiComponent.PROCESS_TABLE);
 	}
 	
@@ -526,15 +557,26 @@ public class CPUFrame extends JFrame {
 	public void addToProcessLog(String msg, Color col)
 	{
 		processLogRaw.add(0,new ProcessLogEntry(msg,col == null ? Color.black : col));
+		processLog.setText(convertLogToHTML());
+		repaintComponents(GuiComponent.PROCESS_LOG);
+
+		SwingUtilities.invokeLater(()->{
+			JScrollPane pane = ((JScrollPane)processLog.getParent().getParent());
+			pane.getHorizontalScrollBar().setValue(pane.getHorizontalScrollBar().getMinimum());			
+			pane.getVerticalScrollBar().setValue(pane.getVerticalScrollBar().getMinimum());			
+		});
+	}
+	
+	private String convertLogToHTML()
+	{
 		String formatted = "<html>";
 		
 		for(ProcessLogEntry ent : processLogRaw)
 		{
-			formatted += "<p style='margin:0;padding:0;color:rgb("+ent.color.getRed()+","+ent.color.getGreen()+","+ent.color.getBlue()+");'>"+ent.entry+"</p>";
+			formatted += "\n\t<p style='white-space:nowrap;margin:0;padding:0;color:rgb("+ent.color.getRed()+","+ent.color.getGreen()+","+ent.color.getBlue()+");'>"+ent.entry+"</p>";
 		}
 		
-		processLog.setText(formatted+"</html>");
-		repaintComponents(GuiComponent.PROCESS_LOG);
+		return formatted+"\n</html>";
 	}
 	
 	/**
@@ -621,7 +663,7 @@ public class CPUFrame extends JFrame {
 				{
 				case SYS_INFO:
 				{
-					if(scheduler != null)
+					if(dispatcher != null)
 					{
 //						setSystemData(, opacity, opacity, opacity);
 					}
@@ -630,6 +672,7 @@ public class CPUFrame extends JFrame {
 				}
 				case PROCESS_TABLE:
 				{
+					SwingUtilities.invokeLater	(()->processTable.repaint());
 					processTable.repaint();
 					break;
 				}
@@ -667,7 +710,7 @@ public class CPUFrame extends JFrame {
 	 */
 	public void onStepOnce()
 	{
-		System.out.println("Stepped once! please fill this method out, or let me know once backend has a callback for this.");
+		dispatcher.tickUp();
 	}
 
 	//TODO
@@ -676,31 +719,133 @@ public class CPUFrame extends JFrame {
 	 */
 	public void onStartStop()
 	{
-		System.out.println("Started/Stopped! please fill this method out, or let me know once backend has a callback for this.");
+		dispatcher.toggleStart(getSelectedFrameRate());
 	}
 
-	//TODO
 	/**
 	 * TODO: A placeholder function called when the Load File button is pressed. To be filled in by backend.
 	 */
 	public void onLoadFile(File file)
 	{
-		System.out.println("Chose file \'"+file.getAbsolutePath()+"\'! please fill this method out, or let me know once backend has a callback for this.");		
-		syncWithScheduler();
-	}
+		dispatcher.loadFromFile(file);
+		addToProcessLog("Loaded file: " + file.getAbsolutePath());
+	} 
 	
-	///TODO
 	/**
-	 * TODO: A function called to synchronize the CPUFrame with it's scheduler object passed at construction.
+	 * Saves the process log to a user-chosen file, either text or html (user chosen).
+	 * 
+	 * @return true if the file was successfully created, false if not
 	 */
-	public void syncWithScheduler()
+	public boolean exportProcessLog()
 	{
-		if(scheduler != null)
-		{
-			//Once scheduler has getters I can do this part
-		}
+		return exportProcessLog(null);
 	}
 
+	/**
+	 * Saves the process log to the given file, either text or html.
+	 * 
+	 * @param fileName set this to null to let the user choose with {@link JFileChooser}, or set it to the name of the output file.
+	 * 
+	 * @return true if the file was successfully created, false if not
+	 */
+	public boolean exportProcessLog(String fileName)
+	{
+		return exportProcessLog(fileName, -1);
+	}
+
+	/**
+	 * Saves the process log to a file, either text or html.
+	 * 
+	 * @param fileName set this to null to let the user choose with {@link JFileChooser}, or set it to the name of the output file.
+	 * @param fileType -1 for user's choice, 0 for .txt, 1 for .html
+	 * 
+	 * @return true if the file was successfully created, false if not
+	 */
+	public boolean exportProcessLog(String fileName, int fileType)
+	{
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+		
+		int result = JFileChooser.APPROVE_OPTION;
+
+		if(fileName == null) //no determined fileName means choose a file
+		{
+			 result = chooser.showSaveDialog(this);			
+		}
+
+		if(result == JFileChooser.APPROVE_OPTION)
+		{
+			//remove extension from user-defined file to make overwriting easier, otherwise use determined fileName
+			File f = fileName == null ? new File(removeExtension(chooser.getSelectedFile().getAbsolutePath())) : new File(fileName);
+			try {
+				if(fileType == -1)
+				{
+					//choose output filetype
+					fileType = JOptionPane.showOptionDialog(this, "Output to a text file or HTML file?", "Select Output File Type", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] {f.getName()+".txt", f.getName()+".html"}, null);
+				}
+				
+				if(fileType == JOptionPane.CLOSED_OPTION)
+				{
+					fileType = 0;
+				}
+				
+				String[] types = {".txt",".html"};
+
+				//compile the file from the path (removing extensions if user-defined) and the specified file format, unless fileName is hardcoded.
+				File finalFile = new File(fileName == null ? f.getAbsolutePath()+types[fileType] : f.getAbsolutePath());
+				finalFile.createNewFile();
+				PrintWriter writer = new PrintWriter(finalFile);
+				
+				if(fileType == 0)
+				{
+					for(ProcessLogEntry logLine : processLogRaw)
+					{
+						writer.println(logLine.entry);
+					}					
+				}
+				else
+				{
+					writer.println(convertLogToHTML());
+				}
+				
+				writer.flush();
+				writer.close();
+				return true;
+			} 
+			catch (IOException e) 
+			{
+				JOptionPane.showMessageDialog(this, "File not found?");
+				return false;
+			}
+		}
+		else //operation was cancelled
+		{
+			return false;
+		}
+	}
+	
+	private String removeExtension(String s)
+	{
+	    String separator = System.getProperty("file.separator");
+	    String filename;
+	    
+	    // Remove the path upto the filename.
+	    int lastSeparatorIndex = s.lastIndexOf(separator);
+	    if (lastSeparatorIndex == -1) {
+	        filename = s;
+	    } else {
+	        filename = s.substring(lastSeparatorIndex + 1);
+	    }
+
+	    // Remove the extension.
+	    int extensionIndex = filename.lastIndexOf(".");
+	    if (extensionIndex == -1)
+	        return filename;
+
+	    return filename.substring(0, extensionIndex);	
+
+	    //Source: https://stackoverflow.com/questions/941272/how-do-i-trim-a-file-extension-from-a-string-in-java
+	}
 	
 	/**
 	 * A data structure to tuple the entry and colors together for processLogRaw.
