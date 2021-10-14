@@ -31,13 +31,15 @@ public class Scheduler {
 
 	public Process RR(List<Process> processes, int quantum) {
 		// Going through each process in turn
+		// Order of processes is FCFS
 		
 		// Quantum checking handled by dispatcher?
 		if (roundRobinIndex > processes.size() - 1) { // no longer a valid index
 			roundRobinIndex = -1;
 		}
 		
-		roundRobinIndex++;		
+		roundRobinIndex++;
+		processes.sort(Comparator.comparing(Process::getArrivalTime));
 		return processes.get(roundRobinIndex);
 	}
 
