@@ -114,7 +114,11 @@ public class Dispatcher { // tells the scheduler when it needs to work
 					finished++;
 				}
 			}
-			return finished / (double) (counter.getCount());
+			
+			BigDecimal bd = BigDecimal.valueOf(finished / (double) (counter.getCount()));
+		    bd = bd.setScale(3, RoundingMode.HALF_UP);
+
+			return bd.doubleValue(); // return average throughput time
 		}
 	}
 
@@ -130,7 +134,11 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		if (count == 0) { // if no processes are finished, display 0
 			return 0;
 		}
-		return totalTime / (double) (count); // return average turnaround time
+		
+		BigDecimal bd = BigDecimal.valueOf(totalTime / (double) (count));
+	    bd = bd.setScale(3, RoundingMode.HALF_UP);
+
+		return bd.doubleValue(); // return average turnaround time
 	}
 
 	private double getWait() {
@@ -141,7 +149,11 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		if (allProcesses.size() == 0) { // if no processes are loaded, display 0
 			return 0;
 		}
-		return totalTime / (double) (allProcesses.size()); // return average wait time
+		
+		BigDecimal bd = BigDecimal.valueOf(totalTime / (double) (allProcesses.size()));
+	    bd = bd.setScale(3, RoundingMode.HALF_UP);
+
+		return bd.doubleValue(); // return average wait time
 	}
 	
 	private String getUtilization() {

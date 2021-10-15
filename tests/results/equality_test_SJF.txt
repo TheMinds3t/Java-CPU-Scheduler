@@ -1,0 +1,61 @@
+Summary Statistics:
+System Time: 39
+Throughput: 0.205
+Average Turnaround: 16.75
+Average Wait: 10.5
+CPU Utilization: 94.872%
+
+Loaded file: C:\Users\oz7332rc\OneDrive - MNSCU\Desktop\workspace\CS405-CPU-Scheduler-FA21\tests\equality_test.txt
+STARTED
+Algorithm used: SJF
+Process 0 arrived at time 1
+Process 1 arrived at time 1
+Process 2 arrived at time 1
+Process 3 arrived at time 1
+Process 4 arrived at time 1
+Process 5 arrived at time 1
+Process 6 arrived at time 1
+Process 7 arrived at time 1
+Process 4 started CPU at time 1
+Process 4: Entered IO Queue at 2
+Process 6 started CPU at time 2
+Process 4: Finished IO and moved back to ready queue at 3
+Process 6: Entered IO Queue at 3
+Process 4 started CPU at time 3
+Process 4 terminated at time 4. Turnaround: 3, CPU wait: 0, IO wait: 1
+Process 6: Finished IO and moved back to ready queue at 4
+Process 6 started CPU at time 4
+Process 6 terminated at time 5. Turnaround: 4, CPU wait: 1, IO wait: 1
+Process 7 started CPU at time 5
+Process 7: Entered IO Queue at 6
+Process 1 started CPU at time 6
+Process 7: Finished IO and moved back to ready queue at 7
+Process 1: Entered IO Queue at 8
+Process 7 started CPU at time 8
+Process 7 terminated at time 9. Turnaround: 8, CPU wait: 5, IO wait: 1
+Process 3 started CPU at time 9
+Process 1: Finished IO and moved back to ready queue at 10
+Process 3: Entered IO Queue at 11
+Process 5 started CPU at time 11
+Process 3: Finished IO and moved back to ready queue at 13
+Process 5 terminated at time 13. Turnaround: 12, CPU wait: 10, IO wait: 0
+Process 3 started CPU at time 13
+Process 3 terminated at time 14. Turnaround: 13, CPU wait: 8, IO wait: 2
+Process 2 started CPU at time 14
+Process 2: Entered IO Queue at 18
+Process 0 started CPU at time 18
+Process 2: Finished IO and moved back to ready queue at 22
+Process 0: Entered IO Queue at 23
+Process 1 started CPU at time 23
+Process 0: Finished IO and moved back to ready queue at 25
+Process 1 preempted from CPU at time 25
+Process 0 started CPU at time 25
+Process 0 terminated at time 28. Turnaround: 27, CPU wait: 17, IO wait: 2
+Process 1 started CPU at time 28
+Process 1 terminated at time 31. Turnaround: 30, CPU wait: 21, IO wait: 2
+Process 2 started CPU at time 31
+Process 2 terminated at time 38. Turnaround: 37, CPU wait: 22, IO wait: 4
+STOPPED
+STARTED
+Algorithm used: SJF
+STOPPED

@@ -1,0 +1,3 @@
+lowpri1 1 5 5 8 7
+lowpri2 1 5 7 5 8
+highpri 1 1 2 2 2 2 2
