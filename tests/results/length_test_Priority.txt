@@ -3,15 +3,18 @@ System Time: 47
 Throughput: 0.06382978723404255
 Average Turnaround: 22.666666666666668
 Average Wait: 6.0
-CPU Utilization: 170.213%
+CPU Utilization: 85.106%
 
 Loaded file: C:\Users\za6193kq\OneDrive - MNSCU\Desktop\School\2021 - 2022\21fall\CS405\CS405-CPU-Scheduler-FA21\tests\length_test.txt
 STARTED
 Process 0 arrived at time 2
+Process 0 arrived at time 2
 Process 0 started CPU at time 2
+Process 1 arrived at time 4
 Process 1 arrived at time 4
 Process 0 preempted from CPU at time 4
 Process 1 started CPU at time 4
+Process 2 arrived at time 5
 Process 2 arrived at time 5
 Process 1 preempted from CPU at time 5
 Process 2 started CPU at time 5
