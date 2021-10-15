@@ -736,7 +736,7 @@ public class CPUFrame extends JFrame {
 	 */
 	public void setSystemData(int time, double throughput, double turnaround, double wait, String cpuUtil)
 	{
-		systemDataLabel.setText("System Time: "+time+"\nThroughput: "+throughput+"\nAverage Turnaround: "+turnaround+"\nAverage Wait: " + wait+"\nCPU Utilization: "+(cpuUtil.length() == 0 ? "0.000%" : cpuUtil));
+		systemDataLabel.setText("System Time: "+time+"\nThroughput: "+throughput+"\nAverage Turnaround: "+turnaround+"\nAverage Wait: " + wait+"\nCPU Utilization: "+(cpuUtil.length() == 0 ? "0.0%" : cpuUtil));
 		repaintComponents(GuiComponent.SYS_INFO);
 	}
 	
@@ -917,7 +917,7 @@ public class CPUFrame extends JFrame {
 					String htmlLog = convertLogToHTML(true); //reverse order for html output
 					int ind = htmlLog.indexOf("<body>")+6;
 					//inject the summary statistics into the generated html for the process log display
-					String htmlInfo = "\n\t\t<br>\n\t\t<h3>Summary Statistics:</h3>\n\t\t\t<p>"+systemDataLabel.getText().replace("\n", "</p>\n\t\t\t<p>")+"</p>\n\t\t<br><br>";
+					String htmlInfo = "\n\t\t<br>\n\t\t<h3>Summary Statistics:</h3>\n\t\t<p>"+systemDataLabel.getText().replace("\n", "</p>\n\t\t<p>")+"</p>\n\t\t<br><br>";
 					writer.println(htmlLog.substring(0,ind)+htmlInfo+htmlLog.substring(ind));
 				}
 				
