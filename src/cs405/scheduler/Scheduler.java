@@ -1,17 +1,12 @@
 package cs405.scheduler;
 
 import cs405.process.Process;
-
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 public class Scheduler {
 	
 	// Does various sorting of lists - dispatcher will handle passing a process to CPU
-
-	private int roundRobinIndex = -1;
 
 	public Scheduler() {}
 
@@ -27,19 +22,8 @@ public class Scheduler {
 		return processes.get(0);
 	}
 
-	public Process RR(List<Process> processes, int quantum) {
-		// Going through each process in turn
-		// Order of processes is FCFS
-		System.out.println(processes.size());
-		System.out.println(roundRobinIndex);
-		// Quantum checking handled by dispatcher?
-		if (roundRobinIndex >= processes.size() - 1) { // no longer a valid index
-			roundRobinIndex = -1;
-		}
-		
-		roundRobinIndex++;
-		processes.sort(Comparator.comparing(Process::getArrivalTime));
-		return processes.get(roundRobinIndex);
+	public Process RR(List<Process> processes) {
+		return FCFS(processes); // the dispatcher handles the quantum time
 	}
 
 	public Process PS(List<Process> processes) {
