@@ -276,4 +276,16 @@ public class QueuePanel extends JPanel {
 		frame.repaintComponents(GuiComponent.QUEUE);
 		return ret;
 	}
+	
+	/**
+	 * A function to empty the display of the queue panel.
+	 */
+	public void wipeQueues()
+	{
+		ioTask = null;
+		cpuTask = null;
+		ioTasks.clear();
+		cpuTasks.clear();
+		frame.repaintComponents(GuiComponent.QUEUE);
+	}
 }
