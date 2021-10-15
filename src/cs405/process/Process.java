@@ -8,6 +8,11 @@ import java.util.List;
 import cs405.scheduler.Dispatcher;
 import cs405.scheduler.SynchronizedCounter;
 
+/**
+ * Represents a process
+ * Keeps track of and handles process information 
+ * @author Alissa Teigland
+ */
 public class Process {
 	// data given in constructor
 	private int pid; // process id
@@ -75,6 +80,14 @@ public class Process {
 	}
 	
 	/**
+	 * gets the processes name
+	 * @return the processes name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
 	 * gets the processes priority
 	 * @return the processes priority
 	 */
@@ -140,6 +153,12 @@ public class Process {
 		return arr;
 	}
 	
+	/**
+	 * Returns a list of bursts in a readable String
+	 * @param list - the list of bursts
+	 * @param burst - which type of burst
+	 * @return a formatted string
+	 */
 	private String getBurstInfo(List<Integer> list, Burst burst) {
 		int index = (burst == Burst.CPU ? currentCpuIndex : currentIoIndex);
 		int completion = (burst == Burst.CPU ? burstCpuCompletion : burstIoCompletion);
@@ -156,8 +175,9 @@ public class Process {
 		}
 		return sb.toString();
 	}
+
 	/**
-	 * For testing purposes.
+	 * toString
 	 * Prints the data from the process
 	 */
 	public String toString() {

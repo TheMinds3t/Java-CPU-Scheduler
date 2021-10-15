@@ -290,7 +290,7 @@ public class CPUFrame extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if(loadedFile)
-					dispatcher.toggleStart();
+					dispatcher.toggleStartStop();
 			}			
 		});
 		JLabel fpsLabel = new JLabel("FPS: ");
