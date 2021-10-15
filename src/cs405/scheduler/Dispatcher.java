@@ -3,6 +3,8 @@ package cs405.scheduler;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -160,7 +162,10 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	}
 	
 	private String getUtilization() {
-		return (double)timeUtilized / counter.getCount() * 100 + "%";
+		BigDecimal bd = BigDecimal.valueOf((double)timeUtilized / counter.getCount() * 100);
+	    bd = bd.setScale(3, RoundingMode.HALF_UP);
+	    
+		return bd.doubleValue() + "%";
 	}
 
 	/**

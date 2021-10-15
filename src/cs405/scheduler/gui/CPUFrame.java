@@ -6,6 +6,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -44,7 +46,11 @@ import cs405.scheduler.Dispatcher;
  * @author Ashton Schultz
  */
 public class CPUFrame extends JFrame {
-
+	/**
+	 * Specifies whether the user gets a confirmation before closing the JFrame or not
+	 */
+	private static final boolean CONFIRM_CLOSE = false;
+	
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTable processTable;
@@ -56,8 +62,11 @@ public class CPUFrame extends JFrame {
 	private ButtonGroup algGroup = new ButtonGroup();
 	private JRadioButtonMenuItem[] algButs = new JRadioButtonMenuItem[4];
 	private JComboBox<Integer> fpsCombo;
+	private JButton exportButton;
+	
 	private QueuePanel queuePanel = new QueuePanel(this);
 	private Dispatcher dispatcher;
+	private boolean loadedFile = false; //used to disable start and step once buttons until file is loaded
 	
 	private ArrayList<ProcessLogEntry> processLogRaw = new ArrayList<ProcessLogEntry>();
 	
@@ -66,22 +75,63 @@ public class CPUFrame extends JFrame {
 	 * Create the frame.
 	 */
 	public CPUFrame(Dispatcher dispatch) {
+		
+		
 		dispatcher = dispatch;
 		setBackground(Color.GRAY);
-		setAlwaysOnTop(true);
 		setResizable(false);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		if(CONFIRM_CLOSE)
+		{//Add a confirmation dialogue before closing
+			this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+			this.addWindowListener(new WindowListener() {
+			    @Override
+			    public void windowClosing(WindowEvent we)
+			    { 
+			        String ObjButtons[] = {"Yes","No"};
+			        int PromptResult = JOptionPane.showOptionDialog(null,"Are you sure you want to exit?","Confirmation Needed",JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE,null,ObjButtons,ObjButtons[1]);
+			        if(PromptResult==JOptionPane.YES_OPTION)
+			        {
+			            System.exit(0);
+			        }
+			    }
+
+				@Override
+				public void windowOpened(WindowEvent e) {}
+
+				@Override
+				public void windowClosed(WindowEvent e) {}
+
+				@Override
+				public void windowIconified(WindowEvent e) {}
+
+				@Override
+				public void windowDeiconified(WindowEvent e) {}
+
+				@Override
+				public void windowActivated(WindowEvent e) {}
+
+				@Override
+				public void windowDeactivated(WindowEvent e) {}
+			});
+		}
+		else
+		{
+			this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		}
+		
 		setBounds(100, 100, 900, 600);
-		setLocationRelativeTo(null);
+		setLocationRelativeTo(null); //center GUI
 		
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.setBackground(Color.WHITE);
 		menuBar.setMargin(new Insets(0, 20, 0, 20));
 		setJMenuBar(menuBar);
 		
-		JLabel menuLMarg = new JLabel("          ");
+		JLabel menuLMarg = new JLabel("          "); //invisible label for adding a margin
 		menuBar.add(menuLMarg);
 		
+		//Menu bar radio for selecting algorithm
 		JLabel algLabel = new JLabel("Scheduling Algorithm:  ");
 		menuBar.add(algLabel);
 		JRadioButtonMenuItem fcfsAlg = new JRadioButtonMenuItem("FCFS");
@@ -96,24 +146,25 @@ public class CPUFrame extends JFrame {
 		
 		JRadioButtonMenuItem rrAlg = new JRadioButtonMenuItem("RR");
 		menuBar.add(rrAlg);
-		
-		
-		algButs[0] = fcfsAlg;
-		algButs[1] = priAlg;
-		algButs[2] = sjfAlg;
-		algButs[3] = rrAlg;
-
+				
+		algButs = new JRadioButtonMenuItem[] {fcfsAlg,priAlg,sjfAlg,rrAlg};
 		algGroup.add(sjfAlg);
 		algGroup.add(priAlg);
 		algGroup.add(fcfsAlg);
 		algGroup.add(rrAlg);
+		fcfsAlg.setEnabled(false);
+		sjfAlg.setEnabled(false);
+		priAlg.setEnabled(false);
+		rrAlg.setEnabled(false);
 		
 		JLabel qLabel = new JLabel("q=");
 		menuBar.add(qLabel);
 		
 		qField = new JTextField();
+		qField.setEnabled(false);
 		menuBar.add(qField);
 		qField.setText("1");
+		
 		//Filter input to numeric only
 		PlainDocument doc = (PlainDocument) qField.getDocument();
 	    doc.setDocumentFilter(new DocumentFilter()
@@ -171,8 +222,11 @@ public class CPUFrame extends JFrame {
 			// https://stackoverflow.com/questions/11093326/restricting-jtextfield-input-to-integers
 	    });
 		
+	    //Another margin for the menu bar
 		JLabel menuRMarg = new JLabel("      ");
 		menuBar.add(menuRMarg);
+		
+		//Main content now
 		contentPane = new JPanel();
 		contentPane.setBackground(Color.GRAY);
 		contentPane.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
@@ -197,24 +251,26 @@ public class CPUFrame extends JFrame {
 		systemDataPanel.setViewportView(systemDataLabel);
 		systemDataPanel.setBounds(0, 0, 100, 100);
 		
+		//wrapper panel for the main palette
 		JPanel panel = new JPanel();
 		systemDataPanel.setColumnHeaderView(panel);
 		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[] {89, 30, 32, 30};
+		gbl_panel.columnWidths = new int[] {89, 30, 32};
 		gbl_panel.rowHeights = new int[] {0, 23, 0, 0, 0, 24};
-		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0};
+		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0};
 		gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 		panel.setLayout(gbl_panel);
 		
 		JLabel lblExecuteLabel = new JLabel("Execution Controls");
 		GridBagConstraints gbc_lblExecuteLabel = new GridBagConstraints();
-		gbc_lblExecuteLabel.gridwidth = 4;
+		gbc_lblExecuteLabel.gridwidth = 3;
 		gbc_lblExecuteLabel.insets = new Insets(0, 0, 5, 0);
 		gbc_lblExecuteLabel.gridx = 0;
 		gbc_lblExecuteLabel.gridy = 0;
 		panel.add(lblExecuteLabel, gbc_lblExecuteLabel);
 		
 		JButton btnStartStop = new JButton("Start / Stop");
+		btnStartStop.setEnabled(false);
 		GridBagConstraints gbc_btnStartStop = new GridBagConstraints();
 		gbc_btnStartStop.anchor = GridBagConstraints.NORTHWEST;
 		gbc_btnStartStop.insets = new Insets(0, 0, 5, 5);
@@ -233,7 +289,8 @@ public class CPUFrame extends JFrame {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				dispatcher.toggleStartStop();
+				if(loadedFile)
+					dispatcher.toggleStart();
 			}			
 		});
 		JLabel fpsLabel = new JLabel("FPS: ");
@@ -244,9 +301,11 @@ public class CPUFrame extends JFrame {
 		gbc_fpsLabel.gridy = 1;
 		panel.add(fpsLabel, gbc_fpsLabel);
 		
+		//Used for choosing fps value
 		fpsCombo = new JComboBox<Integer>();
 		fpsCombo.setModel(new DefaultComboBoxModel<Integer>(new Integer[] {1, 2, 3, 4, 5}));
 		fpsCombo.setSelectedIndex(0);
+		fpsCombo.setEnabled(false);
 		GridBagConstraints gbc_fpsCombo = new GridBagConstraints();
 		gbc_fpsCombo.anchor = GridBagConstraints.WEST;
 		gbc_fpsCombo.insets = new Insets(0, 0, 5, 5);
@@ -255,6 +314,7 @@ public class CPUFrame extends JFrame {
 		panel.add(fpsCombo, gbc_fpsCombo);
 		
 		JButton btnStepOnce = new JButton("Step Once");
+		btnStepOnce.setEnabled(false);
 		GridBagConstraints gbc_btnStepOnce = new GridBagConstraints();
 		gbc_btnStepOnce.gridwidth = 2;
 		gbc_btnStepOnce.insets = new Insets(0, 0, 5, 5);
@@ -273,7 +333,8 @@ public class CPUFrame extends JFrame {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				dispatcher.tickUp();
+				if(loadedFile)
+					dispatcher.tickUp();
 			}			
 		});
 		panel.add(btnStepOnce, gbc_btnStepOnce);
@@ -281,7 +342,7 @@ public class CPUFrame extends JFrame {
 		JLabel fileLabel = new JLabel("File");
 		GridBagConstraints gbc_fileLabel = new GridBagConstraints();
 		gbc_fileLabel.insets = new Insets(0, 0, 5, 0);
-		gbc_fileLabel.gridwidth = 4;
+		gbc_fileLabel.gridwidth = 3;
 		gbc_fileLabel.gridx = 0;
 		gbc_fileLabel.gridy = 3;
 		panel.add(fileLabel, gbc_fileLabel);
@@ -289,44 +350,26 @@ public class CPUFrame extends JFrame {
 		JButton loadFileButton = new JButton("Load From File");
 		loadFileButton.setHorizontalAlignment(SwingConstants.LEFT);
 		GridBagConstraints gbc_loadFileButton = new GridBagConstraints();
-		gbc_loadFileButton.gridwidth = 2;
 		gbc_loadFileButton.insets = new Insets(0, 0, 5, 5);
 		gbc_loadFileButton.gridx = 0;
 		gbc_loadFileButton.gridy = 4;
 		panel.add(loadFileButton, gbc_loadFileButton);
-		loadFileButton.addMouseListener(new MouseListener() {
-			@Override
-			public void mouseClicked(MouseEvent e) {}
-			@Override
-			public void mouseReleased(MouseEvent e) {}
-			@Override
-			public void mouseEntered(MouseEvent e) {}
-			@Override
-			public void mouseExited(MouseEvent e) {}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-				JFileChooser chooser = new JFileChooser();
-				chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
-				int result = chooser.showOpenDialog(CPUFrame.this);
-				
-				if(result == JFileChooser.APPROVE_OPTION)
-				{
-					File f = chooser.getSelectedFile();
-					dispatcher.loadFromFile(f);
-					addToProcessLog("Loaded file: " + f.getAbsolutePath());
-				}
-			}			
-		});
+		
+		JButton clearButton = new JButton("Wipe Data");
+		clearButton.setEnabled(false);
+		GridBagConstraints gbc_clearButton = new GridBagConstraints();
+		gbc_clearButton.gridwidth = 2;
+		gbc_clearButton.insets = new Insets(0, 0, 5, 5);
+		gbc_clearButton.gridx = 1;
+		gbc_clearButton.gridy = 4;
+		panel.add(clearButton, gbc_clearButton);
 
 		JLabel systemInfoLabel = new JLabel("System Information");
 		GridBagConstraints gbc_systemInfoLabel = new GridBagConstraints();
-		gbc_systemInfoLabel.gridwidth = 4;
-		gbc_systemInfoLabel.insets = new Insets(0, 0, 0, 5);
+		gbc_systemInfoLabel.gridwidth = 3;
 		gbc_systemInfoLabel.gridx = 0;
 		gbc_systemInfoLabel.gridy = 5;
 		panel.add(systemInfoLabel, gbc_systemInfoLabel);
-		setSystemData(0,0,0,0);
 		
 		JPanel queuesPanel = new JPanel();
 		queuesPanel.setBackground(Color.GRAY);
@@ -417,9 +460,10 @@ public class CPUFrame extends JFrame {
 		
 		processLog = new JTextPane();
 		processLog.setContentType("text/html");
+		processLog.setEditable(false);
 		scrollPane.setViewportView(processLog);
 		
-		JButton exportButton = new JButton("Export Log");
+		exportButton = new JButton("Export Log");
 		GridBagConstraints gbc_exportButton = new GridBagConstraints();
 		gbc_exportButton.gridwidth = 4;
 		gbc_exportButton.insets = new Insets(0, 0, 0, 5);
@@ -438,9 +482,105 @@ public class CPUFrame extends JFrame {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				exportProcessLog();
+				if(loadedFile)
+					exportProcessLog();
 			}			
 		});
+		
+		loadFileButton.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent e) {}
+			@Override
+			public void mouseReleased(MouseEvent e) {}
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+			@Override
+			public void mouseExited(MouseEvent e) {}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				JFileChooser chooser = new JFileChooser();
+				chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+				int result = chooser.showOpenDialog(CPUFrame.this);
+				
+				if(result == JFileChooser.APPROVE_OPTION)
+				{
+					File f = chooser.getSelectedFile();
+					dispatcher.loadFromFile(f);
+					
+		        	//Enable all fields in the gui
+					loadedFile = true;
+					SwingUtilities.invokeLater(()->{
+						addToProcessLog("Loaded file: " + f.getAbsolutePath());
+					});
+					
+					btnStepOnce.setEnabled(true);
+					btnStartStop.setEnabled(true);
+					clearButton.setEnabled(true);
+					wipeProcessLog();
+					fpsCombo.setEnabled(true);
+					fcfsAlg.setEnabled(true);
+					sjfAlg.setEnabled(true);
+					priAlg.setEnabled(true);
+					rrAlg.setEnabled(true);
+					qField.setEnabled(true);
+					queuePanel.wipeQueues();
+					setSystemData(0,0,0,0,"");
+				}
+			}			
+		});
+		
+		clearButton.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent e) {}
+			@Override
+			public void mouseReleased(MouseEvent e) {}
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+			@Override
+			public void mouseExited(MouseEvent e) {}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if(loadedFile)
+				{
+			        String ObjButtons[] = {"Export & Yes", "Yes","No"};
+			        int result = JOptionPane.showOptionDialog(null,"Are you sure you want to clear the data?","Confirmation Needed",JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE,null,ObjButtons,ObjButtons[1]);
+			        if(result >= 0 && result <= 1)
+			        {
+			        	boolean contFlag = true;
+
+			        	if(result == 0)
+			        	{
+			        		if(!exportProcessLog()) //In case the user cancels the save, disable the clear
+			        		{
+			        			contFlag = false;
+			        		}
+			        	}
+			        	
+			        	if(contFlag)
+			        	{
+				        	//Wipe all data from the gui
+				        	initializeTable(null);
+				        	wipeProcessLog();
+				        	systemDataLabel.setText("");
+							btnStepOnce.setEnabled(false);
+							btnStartStop.setEnabled(false);
+							fcfsAlg.setEnabled(false);
+							sjfAlg.setEnabled(false);
+							priAlg.setEnabled(false);
+							rrAlg.setEnabled(false);
+							clearButton.setEnabled(false);
+							qField.setEnabled(false);
+							fpsCombo.setEnabled(false);
+							loadedFile = false;			        		
+			        	}
+			        }
+				}					
+			}			
+		});
+
+		wipeProcessLog();
 	}
 	
 	public void setTableRowData(int row, Object[] data)
@@ -556,8 +696,9 @@ public class CPUFrame extends JFrame {
 	public void addToProcessLog(String msg, Color col)
 	{
 		processLogRaw.add(0,new ProcessLogEntry(msg,col == null ? Color.black : col));
-		processLog.setText(convertLogToHTML());
+		processLog.setText(convertLogToHTML(false));
 		repaintComponents(GuiComponent.PROCESS_LOG);
+		exportButton.setEnabled(true);
 
 		SwingUtilities.invokeLater(()->{
 			JScrollPane pane = ((JScrollPane)processLog.getParent().getParent());
@@ -566,13 +707,14 @@ public class CPUFrame extends JFrame {
 		});
 	}
 	
-	private String convertLogToHTML()
+	private String convertLogToHTML(boolean reversed)
 	{
 		String formatted = "<!-- Auto-generated by CPU-Scheduler -->\n<!-- Written by Ashton Schultz -->\n"
 				+ "<html>\n\t<head> <style> p {white-space:nowrap;margin:0;padding:0;} </style> </head>\n\t<body>";
 		
-		for(ProcessLogEntry ent : processLogRaw)
+		for(int i = (reversed ? processLogRaw.size()-1 : 0); (reversed ? i >= 0 : i < processLogRaw.size()); i += (reversed ? -1 : 1))
 		{
+			ProcessLogEntry ent = processLogRaw.get(i);
 			formatted += "\n\t\t<p style='color:rgb("+ent.color.getRed()+","+ent.color.getGreen()+","+ent.color.getBlue()+");'>"+ent.entry+"</p>";
 		}
 		
@@ -586,6 +728,7 @@ public class CPUFrame extends JFrame {
 	{
 		processLogRaw.clear();
 		processLog.setText("");
+		exportButton.setEnabled(false);
 		repaintComponents(GuiComponent.PROCESS_LOG);
 	}
 	
@@ -596,9 +739,9 @@ public class CPUFrame extends JFrame {
 	 * @param turnaround new average turnaround
 	 * @param wait new average wait
 	 */
-	public void setSystemData(int time, double throughput, double turnaround, double wait)
+	public void setSystemData(int time, double throughput, double turnaround, double wait, String cpuUtil)
 	{
-		systemDataLabel.setText("System Time: "+time+"\nThroughput: "+throughput+"\nAverage Turnaround: "+turnaround+"\nAverage Wait: " + wait);
+		systemDataLabel.setText("System Time: "+time+"\nThroughput: "+throughput+"\nAverage Turnaround: "+turnaround+"\nAverage Wait: " + wait+"\nCPU Utilization: "+(cpuUtil.length() == 0 ? "0.0%" : cpuUtil));
 		repaintComponents(GuiComponent.SYS_INFO);
 	}
 	
@@ -768,14 +911,19 @@ public class CPUFrame extends JFrame {
 				
 				if(fileType == 0)
 				{
-					for(ProcessLogEntry logLine : processLogRaw)
+					writer.println("Summary Statistics:\n"+systemDataLabel.getText()+"\n");
+					for(int i = processLogRaw.size()-1; i >= 0; --i)
 					{
-						writer.println(logLine.entry);
-					}					
+						writer.println(processLogRaw.get(i).entry);
+					}
 				}
 				else
 				{
-					writer.println(convertLogToHTML());
+					String htmlLog = convertLogToHTML(true); //reverse order for html output
+					int ind = htmlLog.indexOf("<body>")+6;
+					//inject the summary statistics into the generated html for the process log display
+					String htmlInfo = "\n\t\t<br>\n\t\t<h3>Summary Statistics:</h3>\n\t\t<p>"+systemDataLabel.getText().replace("\n", "</p>\n\t\t<p>")+"</p>\n\t\t<br><br>";
+					writer.println(htmlLog.substring(0,ind)+htmlInfo+htmlLog.substring(ind));
 				}
 				
 				writer.flush();
