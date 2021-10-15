@@ -4,9 +4,11 @@ import cs405.process.Process;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Sorts a list of processes according to different scheduling algorithms
+ * @author Emma Rector
+ */
 public class Scheduler {
-	
-	// Does various sorting of lists - dispatcher will handle passing a process to CPU
 
 	public Scheduler() {}
 
