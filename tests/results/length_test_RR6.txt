@@ -1,0 +1,39 @@
+Summary Statistics:
+System Time: 42
+Throughput: 0.07142857142857142
+Average Turnaround: 31.333333333333332
+Average Wait: 14.333333333333334
+CPU Utilization: 95.238%
+
+Loaded file: C:\Users\za6193kq\OneDrive - MNSCU\Desktop\School\2021 - 2022\21fall\CS405\CS405-CPU-Scheduler-FA21\tests\length_test.txt
+STARTED
+Process 0 arrived at time 2
+Process 0 started CPU at time 2
+Process 1 arrived at time 4
+Process 2 arrived at time 5
+Process 0 preempted from CPU at time 8
+Process 1 started CPU at time 8
+Process 1 preempted from CPU at time 14
+Process 2 started CPU at time 14
+Process 2: Entered IO Queue at 15
+Process 0 started CPU at time 15
+Process 2: Finished IO and moved back to ready queue at 16
+Process 0: Entered IO Queue at 19
+Process 1 started CPU at time 19
+Process 1: Entered IO Queue at 20
+Process 2 started CPU at time 20
+Process 0: Finished IO and moved back to ready queue at 21
+Process 2: Entered IO Queue at 21
+Process 0 started CPU at time 21
+Process 1: Finished IO and moved back to ready queue at 23
+Process 2: Finished IO and moved back to ready queue at 23
+Process 0: Entered IO Queue at 26
+Process 1 started CPU at time 26
+Process 0: Finished IO and moved back to ready queue at 29
+Process 1 terminated at time 31. Turnaround: 27, CPU wait: 12, IO wait: 3
+Process 2 started CPU at time 31
+Process 2 terminated at time 32. Turnaround: 27, CPU wait: 21, IO wait: 3
+Process 0 started CPU at time 32
+Process 0 preempted from CPU at time 38
+Process 0 started CPU at time 38
+Process 0 terminated at time 42. Turnaround: 40, CPU wait: 10, IO wait: 5

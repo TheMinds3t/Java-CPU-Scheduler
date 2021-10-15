@@ -1,0 +1,3 @@
+longio 2 4 3 24 3
+shortcpu 1 4 4 2 4
+othercpu 3 4 10
