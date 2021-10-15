@@ -1,0 +1,56 @@
+Summary Statistics:
+System Time: 46
+Throughput: 0.06521739130434782
+Average Turnaround: 29.333333333333332
+Average Wait: 12.0
+CPU Utilization: 347.826%
+
+Loaded file: C:\Users\za6193kq\OneDrive - MNSCU\Desktop\School\2021 - 2022\21fall\CS405\CS405-CPU-Scheduler-FA21\tests\length_test.txt
+STARTED
+Process 0 arrived at time 2
+Process 0 arrived at time 2
+Process 0 started CPU at time 2
+Process 1 arrived at time 4
+Process 1 arrived at time 4
+Process 2 arrived at time 5
+Process 2 arrived at time 5
+Process 0 preempted from CPU at time 5
+Process 1 started CPU at time 5
+Process 1 preempted from CPU at time 8
+Process 0 started CPU at time 8
+Process 0 preempted from CPU at time 11
+Process 2 started CPU at time 11
+Process 2: Entered IO Queue at 12
+Process 1 started CPU at time 12
+Process 2: Finished IO and moved back to ready queue at 13
+Process 1 preempted from CPU at time 15
+Process 0 started CPU at time 15
+Process 0 preempted from CPU at time 18
+Process 2 started CPU at time 18
+Process 2: Entered IO Queue at 19
+Process 1 started CPU at time 19
+Process 1: Entered IO Queue at 20
+Process 2: Finished IO and moved back to ready queue at 20
+Process 0 started CPU at time 20
+Process 0: Entered IO Queue at 21
+Process 2 started CPU at time 21
+Process 2 terminated at time 22. Turnaround: 17, CPU wait: 12, IO wait: 2
+Process 1: Finished IO and moved back to ready queue at 23
+Process 1 started CPU at time 23
+Process 0: Finished IO and moved back to ready queue at 25
+Process 1 preempted from CPU at time 26
+Process 0 started CPU at time 26
+Process 0 preempted from CPU at time 29
+Process 1 started CPU at time 29
+Process 1 terminated at time 31. Turnaround: 27, CPU wait: 12, IO wait: 3
+Process 0 started CPU at time 31
+Process 0: Entered IO Queue at 33
+Process 0: Finished IO and moved back to ready queue at 36
+Process 0 started CPU at time 36
+Process 0 preempted from CPU at time 39
+Process 0 started CPU at time 39
+Process 0 preempted from CPU at time 42
+Process 0 started CPU at time 42
+Process 0 preempted from CPU at time 45
+Process 0 started CPU at time 45
+Process 0 terminated at time 46. Turnaround: 44, CPU wait: 12, IO wait: 7
