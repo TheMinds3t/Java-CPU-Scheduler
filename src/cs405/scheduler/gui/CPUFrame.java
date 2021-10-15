@@ -563,6 +563,7 @@ public class CPUFrame extends JFrame {
 				        	//Wipe all data from the gui
 				        	initializeTable(null);
 				        	wipeProcessLog();
+				        	dispatcher.counter.reset();
 				        	systemDataLabel.setText("");
 							btnStepOnce.setEnabled(false);
 							btnStartStop.setEnabled(false);
