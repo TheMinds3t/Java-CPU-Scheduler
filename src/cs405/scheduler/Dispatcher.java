@@ -33,6 +33,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	Dispatcher() {
 		gui = new CPUFrame(this);
 		counter = new SynchronizedCounter();
+		allProcesses = new ArrayList<Process>();
 		ioQueue = new LinkedList<Process>();
 		cpuQueue = new LinkedList<Process>();
 		scheduler = new Scheduler();
@@ -51,6 +52,9 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	 * Runs when the start/stop button is clicked
 	 */
 	public void toggleStartStop() {
+		if (allProcesses.size() == 0) {
+			return;
+		}
 		started = !started;
 		if (started) {
 			addToProcessLog("STARTED", Color.BLACK);
@@ -118,7 +122,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 			timeUtilized++;
 		}
 		publishProcesses(); // refills process table
-		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait()); // sets system statistics
+		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait(), getUtilization()); // sets system statistics
 	}
 
 	private double getThroughput() {
