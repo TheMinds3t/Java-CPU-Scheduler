@@ -59,11 +59,11 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		if (started) {
 			addToProcessLog("STARTED", Color.BLACK);
 			new Thread(() -> {
-				while (started ) {
+				while (started) {
 					tickUp();
 					// if all processes are terminated, end loop, prompt save
 					if (allProcesses.stream().filter(p -> p.getState() == State.TERMINATED).count() == allProcesses.size()) {
-						return;
+						started = false;
 					}
 					try {
 						Thread.sleep(1000 / gui.getSelectedFrameRate());
