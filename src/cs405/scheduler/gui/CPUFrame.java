@@ -148,8 +148,7 @@ public class CPUFrame extends JFrame {
 		menuBar.add(rrAlg);
 				
 		algButs = new JRadioButtonMenuItem[] {fcfsAlg,priAlg,sjfAlg,rrAlg};
-
-    algGroup.add(sjfAlg);
+		algGroup.add(sjfAlg);
 		algGroup.add(priAlg);
 		algGroup.add(fcfsAlg);
 		algGroup.add(rrAlg);
@@ -567,6 +566,7 @@ public class CPUFrame extends JFrame {
 							sjfAlg.setEnabled(false);
 							priAlg.setEnabled(false);
 							rrAlg.setEnabled(false);
+							clearButton.setEnabled(false);
 							qField.setEnabled(false);
 							fpsCombo.setEnabled(false);
 							loadedFile = false;			        		
