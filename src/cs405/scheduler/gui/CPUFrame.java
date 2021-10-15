@@ -288,7 +288,7 @@ public class CPUFrame extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if(loadedFile)
-					dispatcher.toggleStart();
+					dispatcher.toggleStartStop();
 			}			
 		});
 		JLabel fpsLabel = new JLabel("FPS: ");
@@ -564,6 +564,9 @@ public class CPUFrame extends JFrame {
 				        	//Wipe all data from the gui
 				        	initializeTable(null);
 				        	wipeProcessLog();
+				        	dispatcher.counter.reset();
+				        	dispatcher.setTimeUtilized(0);
+				        	dispatcher.setTimeOnCpu(0);
 				        	systemDataLabel.setText("");
 							btnStepOnce.setEnabled(false);
 							btnStartStop.setEnabled(false);

@@ -13,7 +13,14 @@ import cs405.process.Process;
 import cs405.process.State;
 import cs405.scheduler.gui.CPUFrame;
 
+/**
+ * Middle layer between the scheduler and the GUI
+ * @author Emma Rector and Alissa Teigland
+ */
 public class Dispatcher { // tells the scheduler when it needs to work
+	
+	public SynchronizedCounter counter; // GUI needs access to this sometimes
+	
 	private ArrayList<Process> allProcesses;
 	private LinkedList<Process> ioQueue;
 	private Process currentProcess; // process currently running on the CPU
@@ -21,14 +28,55 @@ public class Dispatcher { // tells the scheduler when it needs to work
 
 	private CPUFrame gui;
 	private Scheduler scheduler;
-	private SynchronizedCounter counter;
+	
 	private boolean started;
-	private int timeOnCpu;
-	private int timeUtilized; 
+	public void setCounter(SynchronizedCounter counter) {
+		this.counter = counter;
+	}
+
+	public void setAllProcesses(ArrayList<Process> allProcesses) {
+		this.allProcesses = allProcesses;
+	}
+
+	public void setIoQueue(LinkedList<Process> ioQueue) {
+		this.ioQueue = ioQueue;
+	}
+
+	public void setCurrentProcess(Process currentProcess) {
+		this.currentProcess = currentProcess;
+	}
+
+	public void setCpuQueue(LinkedList<Process> cpuQueue) {
+		this.cpuQueue = cpuQueue;
+	}
+
+	public void setGui(CPUFrame gui) {
+		this.gui = gui;
+	}
+
+	public void setScheduler(Scheduler scheduler) {
+		this.scheduler = scheduler;
+	}
+
+	public void setStarted(boolean started) {
+		this.started = started;
+	}
+
+	public void setTimeOnCpu(int timeOnCpu) {
+		this.timeOnCpu = timeOnCpu;
+	}
+
+	public void setTimeUtilized(int timeUtilized) {
+		this.timeUtilized = timeUtilized;
+	}
+
+	public int timeOnCpu;
+	public int timeUtilized; 
 
 	Dispatcher() {
 		gui = new CPUFrame(this);
 		counter = new SynchronizedCounter();
+		allProcesses = new ArrayList<Process>();
 		ioQueue = new LinkedList<Process>();
 		cpuQueue = new LinkedList<Process>();
 		scheduler = new Scheduler();
@@ -41,13 +89,45 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		gui.setVisible(true);
 	}
 
-	public void toggleStart() {
+
+	/**
+	 * Starts automatically ticking the counter at the rate set by the gui
+	 * Runs when the start/stop button is clicked
+	 */
+	public void toggleStartStop() {
+		if (allProcesses.size() == 0) {
+			return;
+		}
 		started = !started;
 		if (started) {
 			addToProcessLog("STARTED", Color.BLACK);
+			
+			int algorithm = gui.getSelectedAlgorithm();
+			String algMessage = "Algorithm used: ";
+			switch (algorithm) {
+				case 0:
+					algMessage += "FCFS";
+					break;
+				case 1:
+					algMessage += "Priority";
+					break;
+				case 2:
+					algMessage += "SJF";
+					break;
+				case 3:
+					algMessage += "RR, quantum = " + gui.getQValue();
+					break;
+			}
+			addToProcessLog(algMessage, Color.MAGENTA);
+			
 			new Thread(() -> {
 				while (started) {
 					tickUp();
+					// if all processes are terminated, end loop, prompt save
+					if (allProcesses.stream().filter(p -> p.getState() == State.TERMINATED).count() == allProcesses.size()) {
+						started = false;
+						addToProcessLog("STOPPED", Color.BLACK);
+					}
 					try {
 						Thread.sleep(1000 / gui.getSelectedFrameRate());
 					}
@@ -61,17 +141,11 @@ public class Dispatcher { // tells the scheduler when it needs to work
 			addToProcessLog("STOPPED", Color.BLACK);
 		}
 	}
-
-	public void tickUp() {
-		counter.tickUp(); // increase system time
-		updateCPU();
-		if (currentProcess != null) {
-			timeUtilized++;
-		}
-		publishProcesses(); // refills process table
-		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait(), getUtilization()); // sets system statistics
-	}
 	
+	/**
+	 * Updates the CPU queue and tells the gui
+	 * Includes round robin handling
+	 */
 	private void updateCPU() {
 		if (gui.getSelectedAlgorithm() == 3 && timeOnCpu == gui.getQValue()) { // if RR and quantum time elapsed
 			if (currentProcess != null && currentProcess.getState() == State.RUNNING) {
@@ -102,6 +176,16 @@ public class Dispatcher { // tells the scheduler when it needs to work
 			queue.add(Integer.toString(cpuQueue.get(i).getId()));
 		}
 		gui.getQueuePanel().setQueuedCPUTasks(queue);
+	}
+
+	public void tickUp() {
+		counter.tickUp(); // increase system time
+		updateCPU();
+		if (currentProcess != null) {
+			timeUtilized++;
+		}
+		publishProcesses(); // refills process table
+		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait(), getUtilization()); // sets system statistics
 	}
 
 	private double getThroughput() {
