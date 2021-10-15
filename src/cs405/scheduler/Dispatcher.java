@@ -101,12 +101,32 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		started = !started;
 		if (started) {
 			addToProcessLog("STARTED", Color.BLACK);
+			
+			int algorithm = gui.getSelectedAlgorithm();
+			String algMessage = "Algorithm used: ";
+			switch (algorithm) {
+				case 0:
+					algMessage += "FCFS";
+					break;
+				case 1:
+					algMessage += "Priority";
+					break;
+				case 2:
+					algMessage += "SJF";
+					break;
+				case 3:
+					algMessage += "RR, quantum = " + gui.getQValue();
+					break;
+			}
+			addToProcessLog(algMessage, Color.MAGENTA);
+			
 			new Thread(() -> {
 				while (started) {
 					tickUp();
 					// if all processes are terminated, end loop, prompt save
 					if (allProcesses.stream().filter(p -> p.getState() == State.TERMINATED).count() == allProcesses.size()) {
 						started = false;
+						addToProcessLog("STOPPED", Color.BLACK);
 					}
 					try {
 						Thread.sleep(1000 / gui.getSelectedFrameRate());
