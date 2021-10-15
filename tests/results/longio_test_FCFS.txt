@@ -1,0 +1,24 @@
+Summary Statistics:
+System Time: 35
+Throughput: 0.08571428571428572
+Average Turnaround: 23.0
+Average Wait: 6.333333333333333
+CPU Utilization: 68.571%
+
+Loaded file: C:\Users\za6193kq\OneDrive - MNSCU\Desktop\School\2021 - 2022\21fall\CS405\CS405-CPU-Scheduler-FA21\tests\longio_test.txt
+STARTED
+Process 1 arrived at time 1
+Process 1 started CPU at time 1
+Process 0 arrived at time 2
+Process 2 arrived at time 3
+Process 1: Entered IO Queue at 5
+Process 0 started CPU at time 5
+Process 1: Finished IO and moved back to ready queue at 7
+Process 0: Entered IO Queue at 8
+Process 2 started CPU at time 8
+Process 2 terminated at time 18. Turnaround: 15, CPU wait: 5, IO wait: 0
+Process 1 started CPU at time 18
+Process 1 terminated at time 22. Turnaround: 21, CPU wait: 11, IO wait: 2
+Process 0: Finished IO and moved back to ready queue at 32
+Process 0 started CPU at time 32
+Process 0 terminated at time 35. Turnaround: 33, CPU wait: 3, IO wait: 24
