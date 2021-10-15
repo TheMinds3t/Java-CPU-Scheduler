@@ -151,7 +151,6 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		return bd.doubleValue() + "%";
 	}
 
-
 	/**
 	 * Helper function to allow processes to add to process log
 	 * 
