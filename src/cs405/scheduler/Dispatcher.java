@@ -22,6 +22,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	private SynchronizedCounter counter;
 	private boolean started;
 	private int timeOnCpu;
+	private int timeUtilized; 
 
 	Dispatcher() {
 		gui = new CPUFrame(this);
@@ -31,6 +32,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		scheduler = new Scheduler();
 		started = false;
 		timeOnCpu = 0;
+		timeUtilized = 0;
 	}
 
 	public void startGui() {
@@ -60,16 +62,16 @@ public class Dispatcher { // tells the scheduler when it needs to work
 
 	public void tickUp() {
 		counter.tickUp(); // increase system time
-		// check if any processes running
 		updateCPU();
+		if (currentProcess != null) {
+			timeUtilized++;
+		}
 		publishProcesses(); // refills process table
 		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait()); // sets system statistics
 	}
 	
 	private void updateCPU() {
-		System.out.println(timeOnCpu);
 		if (gui.getSelectedAlgorithm() == 3 && timeOnCpu == gui.getQValue()) { // if RR and quantum time elapsed
-			System.out.println("Here 1");
 			if (currentProcess != null && currentProcess.getState() == State.RUNNING) {
 				currentProcess.preempt();
 			}
@@ -77,11 +79,9 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		}
 		Process p = scheduleProcesses(); // sort processes
 		if (p == null) {
-			System.out.println("Here 2");
 			gui.getQueuePanel().setCurrentCPUTask(null);
 			currentProcess = null;
 		} else if (currentProcess == null || currentProcess.getId() != p.getId()) {
-			System.out.println("Here 3");
 			if (currentProcess != null && currentProcess.getState() == State.RUNNING) {
 				currentProcess.preempt();
 			}
@@ -90,7 +90,6 @@ public class Dispatcher { // tells the scheduler when it needs to work
 			timeOnCpu = 1;
 			p.setCPU();
 		} else { // process stays on CPU
-			System.out.println("Here 4");
 			timeOnCpu++;
 		}
 		
@@ -141,6 +140,10 @@ public class Dispatcher { // tells the scheduler when it needs to work
 			return 0;
 		}
 		return totalTime / (double) (allProcesses.size()); // return average wait time
+	}
+	
+	private String getUtilization() {
+		return (double)timeUtilized / counter.getCount() * 100 + "%";
 	}
 
 	/**

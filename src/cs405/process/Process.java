@@ -3,7 +3,6 @@ package cs405.process;
 import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Iterator;
 import java.util.List;
 
 import cs405.scheduler.Dispatcher;
