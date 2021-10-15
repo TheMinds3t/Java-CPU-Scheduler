@@ -30,8 +30,48 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	private Scheduler scheduler;
 	
 	private boolean started;
-	private int timeOnCpu;
-	private int timeUtilized; 
+	public void setCounter(SynchronizedCounter counter) {
+		this.counter = counter;
+	}
+
+	public void setAllProcesses(ArrayList<Process> allProcesses) {
+		this.allProcesses = allProcesses;
+	}
+
+	public void setIoQueue(LinkedList<Process> ioQueue) {
+		this.ioQueue = ioQueue;
+	}
+
+	public void setCurrentProcess(Process currentProcess) {
+		this.currentProcess = currentProcess;
+	}
+
+	public void setCpuQueue(LinkedList<Process> cpuQueue) {
+		this.cpuQueue = cpuQueue;
+	}
+
+	public void setGui(CPUFrame gui) {
+		this.gui = gui;
+	}
+
+	public void setScheduler(Scheduler scheduler) {
+		this.scheduler = scheduler;
+	}
+
+	public void setStarted(boolean started) {
+		this.started = started;
+	}
+
+	public void setTimeOnCpu(int timeOnCpu) {
+		this.timeOnCpu = timeOnCpu;
+	}
+
+	public void setTimeUtilized(int timeUtilized) {
+		this.timeUtilized = timeUtilized;
+	}
+
+	public int timeOnCpu;
+	public int timeUtilized; 
 
 	Dispatcher() {
 		gui = new CPUFrame(this);

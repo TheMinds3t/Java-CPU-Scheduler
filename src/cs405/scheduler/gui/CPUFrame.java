@@ -564,6 +564,8 @@ public class CPUFrame extends JFrame {
 				        	initializeTable(null);
 				        	wipeProcessLog();
 				        	dispatcher.counter.reset();
+				        	dispatcher.setTimeUtilized(0);
+				        	dispatcher.setTimeOnCpu(0);
 				        	systemDataLabel.setText("");
 							btnStepOnce.setEnabled(false);
 							btnStartStop.setEnabled(false);
