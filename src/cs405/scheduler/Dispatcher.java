@@ -21,6 +21,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	private Scheduler scheduler;
 	private SynchronizedCounter counter;
 	private boolean started;
+	private int timeOnCpu;
 
 	Dispatcher() {
 		gui = new CPUFrame(this);
@@ -29,6 +30,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		cpuQueue = new LinkedList<Process>();
 		scheduler = new Scheduler();
 		started = false;
+		timeOnCpu = 0;
 	}
 
 	public void startGui() {
@@ -65,15 +67,34 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	}
 	
 	private void updateCPU() {
+		System.out.println(timeOnCpu);
+		if (gui.getSelectedAlgorithm() == 3 && timeOnCpu == gui.getQValue()) { // if RR and quantum time elapsed
+			System.out.println("Here 1");
+			if (currentProcess != null && currentProcess.getState() == State.RUNNING) {
+				currentProcess.preempt();
+			}
+			currentProcess = null;
+		}
 		Process p = scheduleProcesses(); // sort processes
 		if (p == null) {
+			System.out.println("Here 2");
 			gui.getQueuePanel().setCurrentCPUTask(null);
 			currentProcess = null;
 		} else if (currentProcess == null || currentProcess.getId() != p.getId()) {
+			System.out.println("Here 3");
+			if (currentProcess != null && currentProcess.getState() == State.RUNNING) {
+				currentProcess.preempt();
+			}
 			gui.getQueuePanel().setCurrentCPUTask(Integer.toString(p.getId()));
 			currentProcess = p;
+			timeOnCpu = 1;
 			p.setCPU();
+		} else { // process stays on CPU
+			System.out.println("Here 4");
+			timeOnCpu++;
 		}
+		
+
 		// update cpu queue
 		ArrayList<String> queue = new ArrayList<String>();
 		for (int i = 1; i < cpuQueue.size(); i++) {
@@ -246,7 +267,8 @@ public class Dispatcher { // tells the scheduler when it needs to work
 			case 2:
 				return scheduler.SJF(cpuQueue);
 			case 3:
-				return scheduler.RR(cpuQueue, gui.getQValue());
+				//return scheduler.RR(cpuQueue, gui.getQValue());
+				return scheduler.FCFS(cpuQueue);
 			default:
 				throw new IllegalArgumentException("No matching method for input " + algorithm);
 		}

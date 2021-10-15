@@ -3,6 +3,7 @@ package cs405.process;
 import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Iterator;
 import java.util.List;
 
 import cs405.scheduler.Dispatcher;
@@ -112,11 +113,9 @@ public class Process {
 	 */
 	public int getNextCPUBurst() {
 		if (processState == State.RUNNING) { // currently working on CPU
-			return CPUbursts.get(currentIoIndex) - burstCpuCompletion;
-		} else if (processState == State.WAITING) { // after working on CPU
-			return CPUbursts.get(currentIoIndex + 1);
-		} else { // before working on CPU
-			return CPUbursts.get(currentIoIndex);
+			return CPUbursts.get(currentCpuIndex) - burstCpuCompletion;
+		} else {
+			return CPUbursts.get(currentCpuIndex);
 		}
 	}
 	
