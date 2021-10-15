@@ -301,6 +301,7 @@ public class CPUFrame extends JFrame {
 		gbc_fpsLabel.gridy = 1;
 		panel.add(fpsLabel, gbc_fpsLabel);
 		
+		//Used for choosing fps value
 		fpsCombo = new JComboBox<Integer>();
 		fpsCombo.setModel(new DefaultComboBoxModel<Integer>(new Integer[] {1, 2, 3, 4, 5}));
 		fpsCombo.setSelectedIndex(0);
@@ -509,7 +510,10 @@ public class CPUFrame extends JFrame {
 					
 		        	//Enable all fields in the gui
 					loadedFile = true;
-					addToProcessLog("Loaded file: " + f.getAbsolutePath());
+					SwingUtilities.invokeLater(()->{
+						addToProcessLog("Loaded file: " + f.getAbsolutePath());
+					});
+					
 					btnStepOnce.setEnabled(true);
 					btnStartStop.setEnabled(true);
 					clearButton.setEnabled(true);
