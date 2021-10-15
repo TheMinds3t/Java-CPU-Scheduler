@@ -17,6 +17,10 @@ public class SynchronizedCounter {
 		counter = 0;
 	}
 	
+	public synchronized void reset() {
+		counter = 0;
+	}
+	
 	public synchronized int getCount() {
 		return counter;
 	}

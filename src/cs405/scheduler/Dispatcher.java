@@ -18,6 +18,9 @@ import cs405.scheduler.gui.CPUFrame;
  * @author Emma Rector and Alissa Teigland
  */
 public class Dispatcher { // tells the scheduler when it needs to work
+	
+	public SynchronizedCounter counter; // GUI needs access to this sometimes
+	
 	private ArrayList<Process> allProcesses;
 	private LinkedList<Process> ioQueue;
 	private Process currentProcess; // process currently running on the CPU
@@ -25,7 +28,7 @@ public class Dispatcher { // tells the scheduler when it needs to work
 
 	private CPUFrame gui;
 	private Scheduler scheduler;
-	private SynchronizedCounter counter;
+	
 	private boolean started;
 	private int timeOnCpu;
 	private int timeUtilized; 
