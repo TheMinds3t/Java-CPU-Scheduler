@@ -1,0 +1,36 @@
+Summary Statistics:
+System Time: 40
+Throughput: 0.075
+Average Turnaround: 32.667
+Average Wait: 16.0
+CPU Utilization: 92.5%
+
+Loaded file: C:\Users\kg3597wc\Documents\GitHub\CS405-CPU-Scheduler-FA21\tests\round_robin_test.txt
+STARTED
+Algorithm used: RR, quantum = 6
+No processes arrived by time 1
+Process 0 arrived at time 2
+Process 0 started CPU at time 2
+Process 2 arrived at time 4
+Process 1 arrived at time 5
+Process 0 preempted from CPU at time 8
+Process 2 started CPU at time 8
+Process 2: Entered IO Queue at 13
+Process 1 started CPU at time 13
+Process 2: Finished IO and moved back to ready queue at 16
+Process 1 preempted from CPU at time 19
+Process 0 started CPU at time 19
+Process 0: Entered IO Queue at 20
+Process 2 started CPU at time 20
+Process 0: Finished IO and moved back to ready queue at 22
+Process 2 preempted from CPU at time 26
+Process 1 started CPU at time 26
+Process 1: Entered IO Queue at 29
+Process 0 started CPU at time 29
+Process 0 terminated at time 33. Turnaround: 31, CPU wait: 18, IO wait: 2
+Process 2 started CPU at time 33
+Process 2 terminated at time 36. Turnaround: 32, CPU wait: 15, IO wait: 3
+Process 1: Finished IO and moved back to ready queue at 37
+Process 1 started CPU at time 37
+Process 1 terminated at time 40. Turnaround: 35, CPU wait: 15, IO wait: 8
+STOPPED
