@@ -90,6 +90,7 @@ public class CPUFrame extends JFrame {
 			        int PromptResult = JOptionPane.showOptionDialog(null,"Are you sure you want to exit?","Confirmation Needed",JOptionPane.DEFAULT_OPTION,JOptionPane.WARNING_MESSAGE,null,ObjButtons,ObjButtons[1]);
 			        if(PromptResult==JOptionPane.YES_OPTION)
 			        {
+			        	exportProcessLog();
 			            System.exit(0);
 			        }
 			    }
