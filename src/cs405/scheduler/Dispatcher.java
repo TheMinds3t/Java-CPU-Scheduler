@@ -179,6 +179,10 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	}
 
 	public void tickUp() {
+		// if everything is done, don't keep going
+		if (allProcesses.stream().filter(p -> p.getState() == State.TERMINATED).count() == allProcesses.size()) {
+			return;
+		}
 		counter.tickUp(); // increase system time
 		updateCPU();
 		if (currentProcess != null) {
