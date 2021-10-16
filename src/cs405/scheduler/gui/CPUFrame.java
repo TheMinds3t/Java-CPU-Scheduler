@@ -49,7 +49,7 @@ public class CPUFrame extends JFrame {
 	/**
 	 * Specifies whether the user gets a confirmation before closing the JFrame or not
 	 */
-	private static final boolean CONFIRM_CLOSE = false;
+	private static final boolean CONFIRM_CLOSE = true;
 	
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
