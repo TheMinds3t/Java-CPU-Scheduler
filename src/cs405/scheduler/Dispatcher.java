@@ -181,8 +181,10 @@ public class Dispatcher { // tells the scheduler when it needs to work
 	public void tickUp() {
 		// if everything is done, don't keep going
 		if (allProcesses.stream().filter(p -> p.getState() == State.TERMINATED).count() == allProcesses.size()) {
+			addToProcessLog("No processes to run", Color.RED);
 			return;
 		}
+		
 		counter.tickUp(); // increase system time
 		updateCPU();
 		if (currentProcess != null) {
@@ -190,6 +192,10 @@ public class Dispatcher { // tells the scheduler when it needs to work
 		}
 		publishProcesses(); // refills process table
 		gui.setSystemData(counter.getCount(), getThroughput(), getTurnaround(), getWait(), getUtilization()); // sets system statistics
+
+		if (allProcesses.stream().filter(p -> p.getState() == State.NEW).count() == allProcesses.size()) {
+			addToProcessLog("No processes arrived by time " + counter.getCount(), Color.ORANGE);
+		}
 	}
 
 	private double getThroughput() {
