@@ -1,0 +1,36 @@
+Summary Statistics:
+System Time: 37
+Throughput: 0.081
+Average Turnaround: 24.667
+Average Wait: 7.333
+CPU Utilization: 89.189%
+
+Loaded file: C:\Users\oz7332rc\OneDrive - MNSCU\Desktop\workspace\CS405-CPU-Scheduler-FA21\tests\priority_test.txt
+STARTED
+Algorithm used: Priority
+Process 0 arrived at time 1
+Process 1 arrived at time 1
+Process 2 arrived at time 1
+Process 2 started CPU at time 1
+Process 2: Entered IO Queue at 3
+Process 0 started CPU at time 3
+Process 2: Finished IO and moved back to ready queue at 5
+Process 0 preempted from CPU at time 5
+Process 2 started CPU at time 5
+Process 2: Entered IO Queue at 7
+Process 1 started CPU at time 7
+Process 2: Finished IO and moved back to ready queue at 9
+Process 1 preempted from CPU at time 9
+Process 2 started CPU at time 9
+Process 2 terminated at time 11. Turnaround: 10, CPU wait: 0, IO wait: 4
+Process 0 started CPU at time 11
+Process 0: Entered IO Queue at 14
+Process 1 started CPU at time 14
+Process 1: Entered IO Queue at 19
+Process 0: Finished IO and moved back to ready queue at 22
+Process 0 started CPU at time 22
+Process 1: Finished IO and moved back to ready queue at 26
+Process 0 terminated at time 29. Turnaround: 28, CPU wait: 8, IO wait: 8
+Process 1 started CPU at time 29
+Process 1 terminated at time 37. Turnaround: 36, CPU wait: 14, IO wait: 7
+STOPPED

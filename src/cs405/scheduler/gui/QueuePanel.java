@@ -11,6 +11,10 @@ import javax.swing.JPanel;
 
 import cs405.process.Burst;
 
+/**
+ * The JPanel hosting the IO/CPU queues for the GUI. Allows for easy manipulation of the labels for the visual elements.
+ * @author Ashton Schultz
+ */
 public class QueuePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private String cpuTask = null, ioTask = null;

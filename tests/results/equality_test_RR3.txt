@@ -1,0 +1,66 @@
+Summary Statistics:
+System Time: 38
+Throughput: 0.211
+Average Turnaround: 25.25
+Average Wait: 19.0
+CPU Utilization: 97.368%
+
+Loaded file: C:\Users\oz7332rc\OneDrive - MNSCU\Desktop\workspace\CS405-CPU-Scheduler-FA21\tests\equality_test.txt
+STARTED
+Algorithm used: RR, quantum = 3
+Process 0 arrived at time 1
+Process 1 arrived at time 1
+Process 2 arrived at time 1
+Process 3 arrived at time 1
+Process 4 arrived at time 1
+Process 5 arrived at time 1
+Process 6 arrived at time 1
+Process 7 arrived at time 1
+Process 0 started CPU at time 1
+Process 0 preempted from CPU at time 4
+Process 1 started CPU at time 4
+Process 1: Entered IO Queue at 6
+Process 2 started CPU at time 6
+Process 1: Finished IO and moved back to ready queue at 8
+Process 2 preempted from CPU at time 9
+Process 3 started CPU at time 9
+Process 3: Entered IO Queue at 11
+Process 4 started CPU at time 11
+Process 4: Entered IO Queue at 12
+Process 5 started CPU at time 12
+Process 3: Finished IO and moved back to ready queue at 13
+Process 4: Finished IO and moved back to ready queue at 13
+Process 5 terminated at time 14. Turnaround: 13, CPU wait: 11, IO wait: 0
+Process 6 started CPU at time 14
+Process 6: Entered IO Queue at 15
+Process 7 started CPU at time 15
+Process 6: Finished IO and moved back to ready queue at 16
+Process 7: Entered IO Queue at 16
+Process 0 started CPU at time 16
+Process 7: Finished IO and moved back to ready queue at 17
+Process 0: Entered IO Queue at 18
+Process 1 started CPU at time 18
+Process 0: Finished IO and moved back to ready queue at 20
+Process 1 preempted from CPU at time 21
+Process 2 started CPU at time 21
+Process 2: Entered IO Queue at 22
+Process 3 started CPU at time 22
+Process 3 terminated at time 23. Turnaround: 22, CPU wait: 17, IO wait: 2
+Process 4 started CPU at time 23
+Process 4 terminated at time 24. Turnaround: 23, CPU wait: 20, IO wait: 1
+Process 6 started CPU at time 24
+Process 6 terminated at time 25. Turnaround: 24, CPU wait: 21, IO wait: 1
+Process 7 started CPU at time 25
+Process 2: Finished IO and moved back to ready queue at 26
+Process 7 terminated at time 26. Turnaround: 25, CPU wait: 22, IO wait: 1
+Process 0 started CPU at time 26
+Process 0 terminated at time 29. Turnaround: 28, CPU wait: 18, IO wait: 2
+Process 1 started CPU at time 29
+Process 1 terminated at time 31. Turnaround: 30, CPU wait: 21, IO wait: 2
+Process 2 started CPU at time 31
+Process 2 preempted from CPU at time 34
+Process 2 started CPU at time 34
+Process 2 preempted from CPU at time 37
+Process 2 started CPU at time 37
+Process 2 terminated at time 38. Turnaround: 37, CPU wait: 22, IO wait: 4
+STOPPED
